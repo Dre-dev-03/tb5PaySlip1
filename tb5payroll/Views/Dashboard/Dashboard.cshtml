@@ -1,4 +1,5 @@
-﻿@{
+﻿
+@{
 	Layout = "_DashboardLayout";
 	ViewBag.Title = "Dashboard";
 }
@@ -9,7 +10,7 @@
 <div class="mb-3 d-flex justify-content-between">
 	<input type="text" id="searchInput" class="form-control w-25" placeholder="Search Employee..." onkeyup="searchEmployee()">
 	<button class="btn btn-primary">Print All</button>
-	<input type="file" id="excelFileInput" class="form-control w-25" accept=".xlsx" />
+	<input type="file" id="excelFileInput" class="form-control w-25" accept=".xlsx, .xls" />
 	<select id="sheetSelect" class="form-select w-25" disabled>
 		<option>Choose Sheet</option>
 	</select>
@@ -37,29 +38,146 @@
 
 <!-- Modal -->
 <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
+	<div class="modal-dialog modal-xl">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h5 class="modal-title" id="detailsModalLabel">Employee Deeets</h5>
+				<h5 class="modal-title" id="detailsModalLabel">Employee Payslip</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
-				<!-- Updated Details Table -->
-				<table class="table table-bordered">
-					<thead class="table-light">
+				<table class="payslip-table">
 					<tr>
-						<th>Employee Information</th>
-						<th>Details</th>
+						<th colspan="7">THE BIG FIVE TRAINING AND ASSESSMENT CENTER</th>
+						<th colspan="3">EMPLOYEE'S COPY</th>
 					</tr>
-					</thead>
-					<tbody id="detailsTableBody">
-					<!-- Dynamic content will be inserted here -->
-					</tbody>
+					<tr>
+						<th colspan="3">PAYSLIP - SEMI MONTHLY PAYROLL</th>
+						<td>PERIOD</td>
+						<td colspan="3">1st CUT OFF (1st / 15th)</td>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td colspan="4">&nbsp;</td>
+						<td>DATE:</td>
+						<td colspan="2" id="dateField">15-SEP-24</td>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td colspan="2">EMPLOYEE:</td>
+						<td colspan="2" id="employeeName"></td>
+						<td>STATUS:</td>
+						<td colspan="2">REGULAR</td>
+						<td colspan="3">WORKING HOURS RENDERED</td>
+					</tr>
+					<tr>
+						<td rowspan="2">OVERTIME</td>
+						<td rowspan="2">MIN</td>
+						<td rowspan="2">PAY</td>
+						<td rowspan="2">ADJUSTMENTS</td>
+						<td rowspan="2">AMOUNT</td>
+						<td rowspan="2">DEDUCTION</td>
+						<td rowspan="2">AMOUNT</td>
+						<td rowspan="2">&nbsp;</td>
+						<td rowspan="2">&nbsp;</td>
+						<td rowspan="2">&nbsp;</td>
+					</tr>
+					<tr></tr>
+					<tr>
+						<td colspan="5">&nbsp;</td>
+						<td>W/H TAX</td>
+						<td id="taxField">0.00</td>
+						<td>GROSS PAY:</td>
+						<td id="grossPay"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>REGULAR</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>INCENTIVE</td>
+						<td>&nbsp;</td>
+						<td>SSS</td>
+						<td>0.00</td>
+						<td>DEDUCTION</td>
+						<td>&nbsp;</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>PAID LEAVES</td>
+						<td>&nbsp;</td>
+						<td>PHILHEALTH</td>
+						<td>0.00</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>HOLIDAY PAY</td>
+						<td id="holidayPay"></td>
+						<td>PAG-IBIG</td>
+						<td>0.00</td>
+						<th>TOTAL</th>
+						<td id="totalField"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>OTHERS</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>TARDINESS</td>
+						<td>&nbsp;</td>
+						<td>LOAN</td>
+						<td>0.00</td>
+						<td>NET PAY</td>
+						<td id="netPay"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>OT</td>
+						<td>&nbsp;</td>
+						<td>LOAN</td>
+						<td>0.00</td>
+						<td>RECEIVED BY:</td>
+						<td id="receivedBy"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>OTHERS/C.A</td>
+						<td>0.00</td>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>APPROVED BY:</td>
+						<td>&nbsp;</td>
+						<td>Denver S. Reyes</td>
+					</tr>
 				</table>
+				
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-			</div>
+				<button type="button" class="btn btn-primary" onclick="printModalContent()">Print</button>			</div>
 		</div>
 	</div>
 </div>
@@ -71,7 +189,214 @@
 	<button id="nextPage" class="btn btn-secondary">Next</button>
 </div>
 
+<style>
+	html, body {
+		height: 100%;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+
+	.modal-body {
+		overflow-x: auto;
+		min-width: 100%;
+	}
+</style>
 <script>
+	// Initialize jsPDF
+	const { jsPDF } = window.jspdf;
+
+	function adjustFontSizeForPrint(table) {
+		const rows = table.querySelectorAll("tr");
+		rows.forEach(row => {
+			const cells = row.querySelectorAll("th, td");
+			cells.forEach(cell => {
+				let fontSize = parseInt(window.getComputedStyle(cell).fontSize);
+
+				// Reduce font size until the text fits
+				while (cell.scrollWidth > cell.clientWidth && fontSize > 6) { // Minimum font size of 6px
+					fontSize--;
+					cell.style.fontSize = `${fontSize}px`;
+				}
+			});
+		});
+	}
+
+	function printModalContent() {
+		console.log("Print button clicked");
+
+		// Clone the modal content
+		const modalContent = document.querySelector("#detailsModal .modal-content").cloneNode(true);
+
+		// Remove unnecessary buttons from the cloned content
+		const buttons = modalContent.querySelectorAll("button");
+		buttons.forEach(button => button.remove());
+
+		// Clone the table and add it below the original table
+		const originalTable = modalContent.querySelector("table");
+		if (originalTable) {
+			const clonedTable = originalTable.cloneNode(true); // Clone the table
+
+			// Update the second table's text to "TB5'S COPY"
+			const employeeCopyText = clonedTable.querySelector("th[colspan='3']");
+			if (employeeCopyText && employeeCopyText.innerText === "EMPLOYEE'S COPY") {
+				employeeCopyText.innerText = "TB5'S COPY";
+			}
+
+			// Add spacing between the tables
+			originalTable.style.marginBottom = "10px"; // Reduced spacing
+			modalContent.appendChild(clonedTable); // Add the cloned table below the original one
+		}
+
+		// Adjust font size for print
+		adjustFontSizeForPrint(modalContent);
+
+		// Open a new window and write the modal content to it
+		const printWindow = window.open("", "_blank");
+		printWindow.document.write(`
+        <html lang="en">
+            <head>
+                <title>Employee Payslip</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        page-break-inside: auto;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    th, td {
+                        border: 1px solid black;
+                        padding: 4px !important;
+                        text-align: left;
+                        white-space: nowrap !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                        font-size: 10px !important;
+                    }
+                    th {
+                        background-color: #f2f2f2 !important;
+                    }
+                    tr {
+                        page-break-inside: avoid !important;
+                        page-break-after: auto !important;
+                    }
+                    @@media print {
+                        body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        table {
+                            width: 100% !important;
+                            font-size: 10px !important;
+                        }
+                        th, td {
+                            padding: 4px !important;
+                            border: 1px solid black !important;
+                        }
+                        th {
+                            background-color: #f2f2f2 !important;
+                        }
+                        /* Add spacing between tables */
+                        table:first-of-type {
+                            margin-bottom: 10px !important;
+                        }
+                        /* Hide unnecessary elements */
+                        .modal-header, .modal-footer, .btn-close {
+                            display: none !important;
+                        }
+                        /* Remove margins and padding from the print window */
+                        @@page {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                ${modalContent.innerHTML}
+            </body>
+        </html>
+    `);
+		printWindow.document.close();
+
+		// Trigger the browser's print dialog
+		printWindow.print();
+	}
+
+	// Function to save the modal content as a PDF
+	// 
+	@*function saveModalAsPDF() {
+		console.log("Save as PDF button clicked"); // Debugging
+
+		// Clone the modal content
+		const modalContent = document.querySelector("#detailsModal .modal-content").cloneNode(true);
+		console.log("Modal content cloned:", modalContent); // Debugging
+
+		// Remove unnecessary buttons from the cloned content
+		const buttons = modalContent.querySelectorAll("button");
+		buttons.forEach(button => button.remove());
+		console.log("Buttons removed from cloned content"); // Debugging
+
+		// Create a temporary container to hold the modal content
+		const tempContainer = document.createElement("div");
+		tempContainer.style.position = "absolute";
+		tempContainer.style.left = "-9999px"; // Move off-screen
+		tempContainer.appendChild(modalContent);
+		document.body.appendChild(tempContainer);
+
+		// Use html2canvas to capture the modified content
+		html2canvas(modalContent, {
+			logging: true, // Enable logging for debugging
+			useCORS: true, // Enable cross-origin resource sharing
+			allowTaint: true, // Allow tainted images (if any)
+			scale: 2, // Increase scale for better quality
+		})
+			.then(canvas => {
+				console.log("html2canvas completed successfully"); // Debugging
+
+				const imgData = canvas.toDataURL('image/png');
+				console.log("Image data generated:", imgData); // Debugging
+
+				const pdf = new jsPDF('p', 'mm', 'a4'); // Use the initialized jsPDF
+				const imgWidth = 210; // A4 width in mm
+				const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+				pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+				pdf.save("employee_payslip.pdf");
+				console.log("PDF saved successfully"); // Debugging
+			})
+			.catch(error => {
+				console.error("Error in html2canvas:", error); // Debugging
+			})
+			.finally(() => {
+				// Clean up the temporary container
+				document.body.removeChild(tempContainer);
+			});
+	}*@
+
+	function adjustFontSizeToFit(table) {
+		const rows = table.querySelectorAll("tr");
+		rows.forEach(row => {
+			const cells = row.querySelectorAll("th, td");
+			cells.forEach(cell => {
+				let fontSize = parseInt(window.getComputedStyle(cell).fontSize);
+
+				// Reduce font size until the text fits
+				while (cell.scrollWidth > cell.clientWidth && fontSize > 8) { // Minimum font size of 8px
+					fontSize--;
+					cell.style.fontSize = `${fontSize}px`;
+				}
+			});
+		});
+	}
+	
 	document.addEventListener("DOMContentLoaded", function () {
 		let currentPage = 0;
 		const rowsPerPage = 7;
@@ -102,7 +427,7 @@
 			currentPage = 1;
 			showPage(currentPage);
 		}
-
+		
 		document.getElementById("searchInput").addEventListener("keyup", searchEmployee);
 		document.getElementById("prevPage").addEventListener("click", () => currentPage > 1 && showPage(--currentPage));
 		document.getElementById("nextPage").addEventListener("click", () => currentPage < totalPages() && showPage(++currentPage));
@@ -113,17 +438,16 @@
 		document.getElementById("employeeTable").addEventListener("click", function (event) {
 			if (event.target.classList.contains("btn-view")) {
 				const row = event.target.closest("tr");
-				const detailsTableBody = document.getElementById("detailsTableBody");
 
-				detailsTableBody.innerHTML = `
-					<tr><td>ID</td><td>${row.cells[0].innerText}</td></tr>
-					<tr><td>Name</td><td>${row.cells[1].innerText}</td></tr>
-					<tr><td>Department</td><td>${row.cells[2].innerText}</td></tr>
-					<tr><td>Holiday</td><td>${row.cells[3].innerText}</td></tr>
-					<tr><td>Overtime</td><td>${row.cells[4].innerText}</td></tr>
-					<tr><td>Hours Worked</td><td>${row.cells[5].innerText}</td></tr>
-				`;
+				// Dynamically fill payslip fields
+				document.getElementById("employeeName").innerText = row.cells[1].innerText;
+				document.getElementById("holidayPay").innerText = row.cells[3].innerText;
+				document.getElementById("grossPay").innerText = row.cells[5].innerText;
+				document.getElementById("netPay").innerText = row.cells[6] ? row.cells[6].innerText : "______";
+				document.getElementById("receivedBy").innerText = row.cells[1].innerText; // Assumed received by employee
+				document.getElementById("totalField").innerText = row.cells[5].innerText;
 
+				// Show modal
 				new bootstrap.Modal(document.getElementById("detailsModal")).show();
 			}
 		});
@@ -168,23 +492,27 @@
 						data.forEach(employee => {
 							const row = document.createElement("tr");
 							row.innerHTML = `
-								<td>${employee.id}</td>
-								<td><a href="#">${employee.name}</a></td>
-								<td>${employee.department}</td>
-								<td>${employee.holiday}</td>
-								<td>${employee.overtime}</td>
-								<td>${employee.hoursWorked}</td>
-								<td>
-									<button class="btn btn-primary btn-view">View</button>
-									<button class="btn btn-danger btn-delete">Delete</button>
-								</td>
-							`;
+                        <td>${employee.id}</td>
+                        <td><a href="#">${employee.name}</a></td>
+                        <td>${employee.department}</td>
+                        <td>${employee.holiday}</td>
+                        <td>${employee.overtime}</td>
+                        <td>${employee.hoursWorked}</td>
+                        <td>
+                            <button class="btn btn-primary btn-view">View</button>
+                            <button class="btn btn-warning btn-view">Edit</button>
+                            <button class="btn btn-danger btn-delete">Delete</button>
+                        </td>
+                    `;
 							tbody.appendChild(row);
 						});
 
 						allRows = Array.from(tbody.rows);
 						filteredRows = [...allRows];
 						showPage(1);
+
+						// Adjust font size to fit
+						adjustFontSizeToFit(document.getElementById("employeeTable"));
 					})
 					.catch(error => console.error("Error fetching data:", error));
 			}

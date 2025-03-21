@@ -1,0 +1,24 @@
+{
+  "name": "thebigfivepayrollsystem",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jhonjhon06/tb5payroll.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jhonjhon06/tb5payroll/issues"
+  },
+  "homepage": "https://github.com/Jhonjhon06/tb5payroll#readme",
+  "description": "",
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1"
+  }
+}

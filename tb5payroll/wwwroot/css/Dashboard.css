@@ -1,109 +1,4 @@
 ﻿
-/* Navbar */
-.navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: lightgray;
-    padding: 10px 20px;
-    height: 80px;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-/* Sidebar */
-.sidebar {
-    width: 280px;
-    height: calc(100vh - 80px); /* Adjusted to stay below navbar */
-    background: #1518f3;
-    color: white;
-    position: fixed;
-    top: 80px; /* Starts just below navbar */
-    left: 0;
-    padding-top: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-    /* Sidebar Links */
-    .sidebar a {
-        display: block;
-        width: 80%;
-        text-align: center;
-        padding: 15px;
-        color: white;
-        text-decoration: none;
-        font-size: 16px;
-        font-weight: bold;
-        border-radius: 8px;
-        transition: all 0.3s ease-in-out;
-    }
-
-        /* Sidebar Hover Effect */
-        .sidebar a:hover {
-            background: #0056b3;
-            border: 2px solid white;
-        }
-
-/* Content area should not overlap with sidebar */
-.content {
-    position: absolute;
-    top: 70px; /* Start immediately after navbar */
-    left: 280px;
-    right: 0;
-    bottom: 0;
-    padding: 10px;
-    overflow-x: auto;
-}
-
-thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: skyblue; /* Ensures it doesn't become transparent */
-}
-
-.table-responsive {
-    max-height: 350px;
-    overflow: auto;
-}
-
-thead, tbody, tr, td, th {
-    display: block;
-}
-
-thead {
-    width: 100%;
-}
-
-/* Responsive Design - Sidebar Collapses on Small Screens */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-280px);
-        transition: transform 0.3s;
-    }
-
-        .sidebar.active {
-            transform: translateX(0);
-        }
-
-    .content {
-        margin-left: 0;
-        width: 100%;
-    }
-}
-
-
-/* Hover effect with border */
-.sidebar a:hover {
-    background: #0056b3;
-    border: 2px solid white; /* Adds a border on hover */
-}
-
 
 /* Logo and Text Styling */
 .logo-container {
@@ -181,4 +76,49 @@ thead {
 .logout {
     margin-top: auto;
     padding-bottom: 20px;
+}
+.modal-body {
+    overflow-x: auto;
+    min-width: 900px;
+}
+
+/* Payslip Table Styles */
+.payslip-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    text-align: left;
+    white-space: nowrap;
+    background-color: white; /* White background */
+    color: black; /* Black text */
+    page-break-inside: auto; /* Prevent table from breaking across pages */
+}
+
+/* Table Headers & Cells */
+.payslip-table th,
+.payslip-table td {
+    border: 1px solid black; /* Keep dotted borders */
+    padding: 4px;
+    text-align: left;
+}
+
+/* Header Row */
+.payslip-table th {
+    background-color: #f2f2f2; /* Light gray background for headers */
+}
+
+/* Table Rows */
+.payslip-table tr {
+    page-break-inside: avoid; /* Prevent rows from breaking across pages */
+    page-break-after: auto;
+    background-color: white; /* Ensure all rows have a white background */
+}
+
+.payslip-table th,
+.payslip-table td {
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Add ellipsis if text overflows */
+    max-width: 150px; /* Set a maximum width for cells */
+    font-size: 12px; /* Default font size */
 }
