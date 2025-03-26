@@ -1,36 +1,263 @@
 ﻿@{
 	Layout = "_ContributionLayout";
-	ViewBag.Title = "Dashboard";
+	ViewBag.Title = "Contributions";
 }
-<h2>Contributions</h2>
-<div class="mb-3 d-flex justify-content-between">
-	<input type="text" id="searchInput" class="form-control w-25" placeholder="Search Employee..." onkeyup="searchEmployee()">
-</div>
-<body>
-	<div class="container">
-		<div class="input-group">
-			<label for="wh-tax">W/H TAX:</label>
-			<input type="text" id="wh-tax" placeholder="%/FLAT RATE">
+
+<h2 class="mb-4">Contributions</h2>
+
+<div class="container">
+	<div class="row mb-4">
+		<!-- Employee List Column -->
+		<div class="col-md-6">
+			<div class="card h-100">
+				<div class="card-header bg-primary text-white text-center">
+					<h5>Employee List</h5>
+				</div>
+				<div class="card-body p-0 d-flex flex-column"> <!-- Removed padding and added p-0 -->
+					<!-- Search Bar at Top -->
+					<div class="p-3 border-bottom"> <!-- Added padding and border -->
+						<div class="input-group">
+							<input type="text" id="searchInput" class="form-control" placeholder="Search employees..." onkeyup="searchEmployee()">
+							<button class="btn btn-outline-secondary" type="button" onclick="searchEmployee()">
+								<i class="fas fa-search"></i>
+							</button>
+						</div>
+					</div>
+
+					<!-- Compact Employee Table -->
+					<div class="table-responsive flex-grow-1" style="height: 300px; overflow-y: auto;">
+						<table class="table table-hover mb-0"> <!-- mb-0 removes bottom margin -->
+							<thead class="sticky-top bg-light"> <!-- Makes header sticky -->
+							<tr>
+								<th style="width: 30%">ID</th>
+								<th style="width: 50%">Name</th>
+								<th style="width: 20%">Action</th>
+							</tr>
+							</thead>
+							<tbody id="employeeTableBody">
+							<!-- Rows populated by JavaScript -->
+							</tbody>
+						</table>
+					</div>
+
+					<!-- Compact Refresh Button -->
+					<div class="p-2 border-top text-center"> <!-- Smaller padding -->
+						<button class="btn btn-sm btn-outline-primary" onclick="loadAllEmployees()">
+							<i class="fas fa-sync-alt me-1"></i>Refresh
+						</button>
+					</div>
+				</div>
+			</div>
 		</div>
-		<div class="input-group">
-			<label for="pag-ibig">PAG-IBIG:</label>
-			<input type="text" id="pag-ibig" placeholder="%/FLAT RATE">
-		</div>
-		<div class="input-group">
-			<label for="sss">SSS:</label>
-			<input type="text" id="sss" placeholder="%/FLAT RATE">
-		</div>
-		<div class="input-group">
-			<label for="tardiness">TARDINESS:</label>
-			<input type="text" id="tardiness" placeholder="%/FLAT RATE">
-		</div>
-		<div class="input-group">
-			<label for="loan">LOAN:</label>
-			<input type="text" id="loan" placeholder="%/FLAT RATE">
-		</div>
-		<div class="input-group">
-			<label for="others">OTHERS/CA:</label>
-			<input type="text" id="others" placeholder="%/FLAT RATE">
+
+		<div class="col-md-6">
+			<div class="card h-100"> <!-- Added h-100 to match height -->
+				<div class="card-header bg-primary text-white">
+					<h5>Contribution Details</h5>
+				</div>
+				<div class="card-body">
+					<form id="contributionForm">
+						<input type="hidden" id="selectedEmployeeId">
+						<div class="mb-3">
+							<label class="form-label">Selected Employee:</label>
+							<span id="selectedEmployeeName" class="form-control-plaintext fw-bold">None selected</span>
+						</div>
+
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="wh-tax">W/H TAX:</label>
+							<input type="number" step="0.01" class="form-control" id="wh-tax" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-wh-tax">-</span>
+						</div>
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="pag-ibig">PAG-IBIG:</label>
+							<input type="number" step="0.01" class="form-control" id="pag-ibig" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-pag-ibig">-</span>
+						</div>
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="sss">SSS:</label>
+							<input type="number" step="0.01" class="form-control" id="sss" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-sss">-</span>
+						</div>
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="philhealth">PHILHEALTH:</label>
+							<input type="number" step="0.01" class="form-control" id="philhealth" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-philhealth">-</span>
+						</div>
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="tardiness">TARDINESS:</label>
+							<input type="number" step="0.01" class="form-control" id="tardiness" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-tardiness">-</span>
+						</div>
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="loan">LOAN:</label>
+							<input type="number" step="0.01" class="form-control" id="loan" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-loan">-</span>
+						</div>
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="others">OTHERS/CA:</label>
+							<input type="number" step="0.01" class="form-control" id="others" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-others">-</span>
+						</div>
+
+						<div class="d-flex justify-content-between mt-3">
+							<button type="button" class="btn btn-primary" onclick="applyContributions()">
+								<i class="fas fa-user-edit"></i> Apply to Selected
+							</button>
+							<button type="button" class="btn btn-success" onclick="applyToAll()">
+								<i class="fas fa-users"></i> Apply to All
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
 	</div>
-</body>
+</div>
+
+@section Scripts {
+	<script>
+		// Load all employees when page loads
+		document.addEventListener('DOMContentLoaded', function() {
+			loadAllEmployees();
+		});
+
+		// Load all employees from server
+		function loadAllEmployees() {
+			fetch('/Contribution/GetAllEmployees', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			})
+				.then(response => response.json())
+				.then(data => populateEmployeeTable(data))
+				.catch(error => console.error('Error loading employees:', error));
+		}
+
+		// Populate employee table
+		function populateEmployeeTable(employees) {
+			const tableBody = document.getElementById('employeeTableBody');
+			tableBody.innerHTML = '';
+
+			employees.forEach(employee => {
+				const row = document.createElement('tr');
+				row.innerHTML = `
+            <td>${employee.birthday}</td>
+            <td>${employee.name}</td>
+            <td><button class="btn btn-sm btn-primary" onclick="selectEmployee('${employee.id}')">Select</button></td>
+        `;
+				tableBody.appendChild(row);
+			});
+		}
+
+		// Select an employee and load their current values
+		async function selectEmployee(employeeId) {
+			try {
+				const response = await fetch(`/Contribution/GetEmployeeContributions?id=${employeeId}`);
+				const employee = await response.json();
+
+				// Set selected employee
+				document.getElementById('selectedEmployeeId').value = employee.id;
+				document.getElementById('selectedEmployeeName').textContent = employee.name;
+
+				// Display current values
+				document.getElementById('wh-tax').value = employee.sssEmployeeData || '';
+				document.getElementById('pag-ibig').value = employee.pagIbigEmployeeData || '';
+				document.getElementById('sss').value = employee.sssEmployeeData || '';
+				document.getElementById('philhealth').value = employee.philHealthEmployeeData || '';
+				document.getElementById('tardiness').value = employee.cashAdvEmployeeData || '';
+				document.getElementById('loan').value = employee.loanEmployeeData || '';
+				document.getElementById('others').value = employee.trainingEmployeeData || '';
+
+				// Show current values
+				document.getElementById('current-wh-tax').textContent = formatCurrency(employee.sssEmployeeData);
+				document.getElementById('current-pag-ibig').textContent = formatCurrency(employee.pagIbigEmployeeData);
+				document.getElementById('current-sss').textContent = formatCurrency(employee.sssEmployeeData);
+				document.getElementById('current-philhealth').textContent = formatCurrency(employee.philHealthEmployeeData);
+				document.getElementById('current-tardiness').textContent = formatCurrency(employee.cashAdvEmployeeData);
+				document.getElementById('current-loan').textContent = formatCurrency(employee.loanEmployeeData);
+				document.getElementById('current-others').textContent = formatCurrency(employee.trainingEmployeeData);
+			} catch (error) {
+				console.error('Error loading employee data:', error);
+				alert('Error loading employee contributions');
+			}
+}
+
+		// Format currency values
+		function formatCurrency(value) {
+			return value ? '₱' + parseFloat(value).toFixed(2) : '-';
+		}
+
+		// Apply contributions to selected employee
+		function applyContributions() {
+			const employeeId = document.getElementById('selectedEmployeeId').value;
+			if (!employeeId) {
+				alert('Please select an employee first!');
+				return;
+			}
+			applyContributionData(employeeId, '/Contribution/ApplyContributions');
+		}
+
+		// Apply contributions to all employees
+		function applyToAll() {
+			if (confirm('Are you sure you want to apply these contributions to ALL employees?')) {
+				applyContributionData(null, '/Contribution/ApplyToAll');
+			}
+}
+
+		// Shared function for applying contributions
+		function applyContributionData(employeeId, endpoint) {
+			const contributionData = {
+				EmployeeId: employeeId,
+				WHTax: parseFloat(document.getElementById('wh-tax').value) || null,
+				PagIbig: parseFloat(document.getElementById('pag-ibig').value) || null,
+				SSS: parseFloat(document.getElementById('sss').value) || null,
+				PhilHealth: parseFloat(document.getElementById('philhealth').value) || null,
+				Tardiness: parseFloat(document.getElementById('tardiness').value) || null,
+				Loan: parseFloat(document.getElementById('loan').value) || null,
+				Others: parseFloat(document.getElementById('others').value) || null
+			};
+
+			fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(contributionData)
+			})
+				.then(response => {
+					if (response.ok) {
+						const message = employeeId ?
+							'Contributions updated for selected employee!' :
+							'Contributions updated for all employees!';
+						alert(message);
+						if (employeeId) {
+							// Refresh current employee's values
+							selectEmployee(employeeId);
+						} else {
+							// Refresh entire list
+							loadAllEmployees();
+						}
+					} else {
+						alert('Error applying contributions');
+					}
+				})
+				.catch(error => console.error('Error:', error));
+		}
+
+		function searchEmployee() {
+			const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+			const rows = document.querySelectorAll('#employeeTableBody tr');
+
+			rows.forEach(row => {
+				const name = row.cells[1].textContent.toLowerCase();
+				const id = row.cells[0].textContent.toLowerCase();
+				row.style.display = (name.includes(searchTerm) || id.includes(searchTerm))
+					? ''
+					: 'none';
+			});
+
+			// Show "No results" message if needed
+			const visibleRows = [...rows].filter(row => row.style.display !== 'none');
+			if (visibleRows.length === 0 && searchTerm.length > 0) {
+				// You could add a "no results" row here if desired
+			}
+}
+	</script>
+}

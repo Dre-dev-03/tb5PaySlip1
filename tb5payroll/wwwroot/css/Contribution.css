@@ -171,3 +171,48 @@ input {
     margin-top: auto;
     padding-bottom: 20px;
 }
+/* Compact Table Styles */
+.table-responsive {
+    scrollbar-width: thin; /* For Firefox */
+}
+
+.table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: #adb5bd;
+    border-radius: 3px;
+}
+
+.table thead th {
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table tbody tr {
+    height: 40px; /* More compact row height */
+}
+
+.table td, .table th {
+    padding: 0.5rem; /* Reduced padding */
+    vertical-align: middle;
+}
+
+/* Search Bar Styling */
+#searchInput {
+    border-right: none;
+}
+
+#searchInput:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+.input-group-text {
+    background-color: transparent;
+    border-left: none;
+}
