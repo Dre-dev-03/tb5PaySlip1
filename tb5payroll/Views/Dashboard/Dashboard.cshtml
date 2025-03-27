@@ -23,7 +23,7 @@
 		<tr>
 			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">ID No</th>
 			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">Name</th>
-			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">Department</th>
+			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">Workday</th> 
 			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">Holiday</th>
 			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">Overtime</th>
 			<th style="position: sticky; top: 0; z-index: 2; background: skyblue;">Hours Worked</th>
@@ -492,29 +492,26 @@
 						data.forEach(employee => {
 							const row = document.createElement("tr");
 							row.innerHTML = `
-                        <td>${employee.id}</td>
-                        <td><a href="#">${employee.name}</a></td>
-                        <td>${employee.department}</td>
-                        <td>${employee.holiday}</td>
-                        <td>${employee.overtime}</td>
-                        <td>${employee.hoursWorked}</td>
-                        <td>
-                            <button class="btn btn-primary btn-view">View</button>
-                            <button class="btn btn-warning btn-view">Edit</button>
-                            <button class="btn btn-danger btn-delete">Delete</button>
-                        </td>
-                    `;
+                <td>${employee.id}</td>
+                <td><a href="#">${employee.name}</a></td>
+                <td>${employee.workday}</td> <!-- Changed from department to workday -->
+                <td>${employee.holiday}</td>
+                <td>${employee.overtime}</td>
+                <td>${employee.hoursWorked}</td>
+                <td>
+                    <button class="btn btn-primary btn-view">View</button>
+                    <button class="btn btn-warning btn-view">Edit</button>
+                    <button class="btn btn-danger btn-delete">Delete</button>
+                </td>
+            `;
 							tbody.appendChild(row);
 						});
 
 						allRows = Array.from(tbody.rows);
 						filteredRows = [...allRows];
 						showPage(1);
-
-						// Adjust font size to fit
 						adjustFontSizeToFit(document.getElementById("employeeTable"));
 					})
-					.catch(error => console.error("Error fetching data:", error));
 			}
 		});
 	});

@@ -84,6 +84,11 @@ public async Task<IActionResult> GetData(string sheetName)
                     var id = worksheet.Cells[row, 1].Text; // Excel ID (birthday)
                     var name = "Not Found"; // Default value if no match or parsing fails
 
+                    // Get the values from specific columns
+                    var hoursWorked = worksheet.Cells[row, 5].Text; // Column E (5)
+                    var overtime = worksheet.Cells[row, 10].Text; // Column J (10)
+                    var workday = worksheet.Cells[row, 12].Text; // Column L (12)
+
                     // Attempt to parse the ID as an integer (birthday)
                     if (int.TryParse(id, out int birthdayId))
                     {
@@ -91,10 +96,27 @@ public async Task<IActionResult> GetData(string sheetName)
                         var employeeData = await _context.EmployeeData
                             .FirstOrDefaultAsync(e => e.BirthdayEmployeeData == birthdayId);
 
-                        // If a matching record is found, update the name
+                        // If a matching record is found, update the name and database fields
                         if (employeeData != null)
                         {
                             name = employeeData.NameEmployeeData;
+                            
+                            // Update database fields if values exist
+                            if (decimal.TryParse(hoursWorked, out decimal hoursWorkedValue))
+                            {
+                                employeeData.HoursWorkedEmployeeData = hoursWorkedValue;
+                            }
+                            
+                            if (decimal.TryParse(overtime, out decimal overtimeValue))
+                            {
+                                employeeData.OvertimeHoursEmployeeData = overtimeValue;
+                            }
+                            
+                            // Note: Workday might not have a direct field in EmployeeData, adjust as needed
+                            // For example, you might want to map it to another field or calculate something
+                            
+                            // Save changes to the database
+                            await _context.SaveChangesAsync();
                         }
                         else
                         {
@@ -113,10 +135,10 @@ public async Task<IActionResult> GetData(string sheetName)
                     {
                         Id = id,
                         Name = name,
-                        Department = "", 
-                        Holiday = 0,
-                        Overtime = 0,
-                        HoursWorked = 0
+                        Workday = workday, 
+                        Holiday = 0, // You might want to extract this from another column
+                        Overtime = decimal.TryParse(overtime, out decimal ov) ? (int)ov : 0,
+                        HoursWorked = decimal.TryParse(hoursWorked, out decimal hw) ? (int)hw : 0
                     });
                 }
             }
@@ -129,12 +151,11 @@ public async Task<IActionResult> GetData(string sheetName)
         return StatusCode(500, $"Internal server error: {ex.Message}");
     }
 }
-
         public class Employee
         {
             public string Id { get; set; }
             public string Name { get; set; }
-            public string Department { get; set; }
+            public string Workday { get; set; } 
             public int Holiday { get; set; }
             public int Overtime { get; set; }
             public int HoursWorked { get; set; }
