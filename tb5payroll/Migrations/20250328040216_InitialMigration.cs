@@ -5,7 +5,7 @@
 namespace tb5payroll.Migrations
 {
     /// <inheritdoc />
-    public partial class ArchiveSet : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

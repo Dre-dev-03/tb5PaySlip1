@@ -67,7 +67,8 @@
 						<td colspan="2" id="employeeName"></td>
 						<td>STATUS:</td>
 						<td colspan="2">REGULAR</td>
-						<td colspan="3">WORKING HOURS RENDERED</td>
+						<td>HOURS WORKED <span id="hoursWorked"></span></td>
+						<td colspan="2">&nbsp;</td>
 					</tr>
 					<tr>
 						<td rowspan="2">OVERTIME</td>
@@ -77,18 +78,15 @@
 						<td rowspan="2">AMOUNT</td>
 						<td rowspan="2">DEDUCTION</td>
 						<td rowspan="2">AMOUNT</td>
-						<td rowspan="2">&nbsp;</td>
-						<td rowspan="2">&nbsp;</td>
-						<td rowspan="2">&nbsp;</td>
+						<td colspan="3"rowspan="2">&nbsp;</td>
 					</tr>
 					<tr></tr>
 					<tr>
 						<td colspan="5">&nbsp;</td>
-						<td>W/H TAX</td>
-						<td id="taxField">0.00</td>
-						<td>GROSS PAY:</td>
-						<td id="grossPay"></td>
-						<td></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td colspan="2">GROSS PAY</td>
+						<td id="grossPay">0.00</td>
 					</tr>
 					<tr>
 						<td>REGULAR</td>
@@ -96,11 +94,10 @@
 						<td>&nbsp;</td>
 						<td>INCENTIVE</td>
 						<td>&nbsp;</td>
-						<td>SSS</td>
-						<td>0.00</td>
-						<td>DEDUCTION</td>
-						<td>&nbsp;</td>
-						<td></td>
+						<td>W/H TAX</td>
+						<td id="taxField" data-editable="true" data-field="sss">0.00</td>
+						<td colspan="2">DEDUCTION</td>
+						<td id="totalDeductions">0.00</td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
@@ -108,23 +105,20 @@
 						<td>&nbsp;</td>
 						<td>PAID LEAVES</td>
 						<td>&nbsp;</td>
-						<td>PHILHEALTH</td>
-						<td>0.00</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td></td>
+						<td>SSS</td>
+						<td id="sssField" data-editable="true" data-field="sss">0.00</td>
+						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
 						<td>&nbsp;</td>
 						<td>&nbsp;</td>
 						<td>HOLIDAY PAY</td>
-						<td id="holidayPay"></td>
-						<td>PAG-IBIG</td>
-						<td>0.00</td>
-						<th>TOTAL</th>
-						<td id="totalField"></td>
-						<td></td>
+						<td id="holidayPay" data-editable="true" data-field="holiday">0.00</td>
+						<td>PHILHEALTH</td>
+						<td id="philhealthField" data-editable="true" data-field="philhealth">0.00</td>
+						<th colspan="2">TOTAL</th>
+						<td id="totalField">0.00</td>
 					</tr>
 					<tr>
 						<td>OTHERS</td>
@@ -132,11 +126,11 @@
 						<td>&nbsp;</td>
 						<td>TARDINESS</td>
 						<td>&nbsp;</td>
-						<td>LOAN</td>
-						<td>0.00</td>
-						<td>NET PAY</td>
-						<td id="netPay"></td>
-						<td></td>
+						<td>PAG-IBIG</td>
+						<td id="pagibigField" data-editable="true" data-field="pagibig">0.00</td>
+
+						<td colspan="2">NET PAY</td>
+						<td id="netPay">0.00</td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
@@ -145,10 +139,9 @@
 						<td>OT</td>
 						<td>&nbsp;</td>
 						<td>LOAN</td>
-						<td>0.00</td>
-						<td>RECEIVED BY:</td>
+						<td id="loanField" data-editable="true" data-field="loan">0.00</td>
+						<td colspan="2">RECEIVED BY:</td>
 						<td id="receivedBy"></td>
-						<td></td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
@@ -157,8 +150,10 @@
 						<td>&nbsp;</td>
 						<td>&nbsp;</td>
 						<td>OTHERS/C.A</td>
-						<td>0.00</td>
+						<td id="othersField" data-editable="true" data-field="others">0.00</td>
 						<td colspan="3">&nbsp;</td>
+
+
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
@@ -168,9 +163,8 @@
 						<td>&nbsp;</td>
 						<td>&nbsp;</td>
 						<td>&nbsp;</td>
-						<td>APPROVED BY:</td>
-						<td>&nbsp;</td>
-						<td>Denver S. Reyes</td>
+						<td colspan="2">APPROVED BY:</td>
+						<td>DANVER S. REYES</td>
 					</tr>
 				</table>
 				
@@ -434,21 +428,52 @@
 
 		showPage(currentPage);
 
-		// Handle View Button Click (Event Delegation)
+		// Update the existing event listener for the View button
 		document.getElementById("employeeTable").addEventListener("click", function (event) {
 			if (event.target.classList.contains("btn-view")) {
 				const row = event.target.closest("tr");
+				const employeeId = row.cells[0].innerText;
 
-				// Dynamically fill payslip fields
-				document.getElementById("employeeName").innerText = row.cells[1].innerText;
-				document.getElementById("holidayPay").innerText = row.cells[3].innerText;
-				document.getElementById("grossPay").innerText = row.cells[5].innerText;
-				document.getElementById("netPay").innerText = row.cells[6] ? row.cells[6].innerText : "______";
-				document.getElementById("receivedBy").innerText = row.cells[1].innerText; // Assumed received by employee
-				document.getElementById("totalField").innerText = row.cells[5].innerText;
+				fetch(`/Dashboard/GetEmployeeDetails?id=${employeeId}`)
+					.then(response => {
+						if (!response.ok) throw new Error('Network response was not ok');
+						return response.json();
+					})
+					.then(data => {
+						const employeeName = data.name || data.nameEmployeeData || "Unknown Employee";
 
-				// Show modal
-				new bootstrap.Modal(document.getElementById("detailsModal")).show();
+						// Update all fields
+						document.getElementById("employeeName").innerText = employeeName;
+						document.getElementById("receivedBy").innerText = employeeName;
+						document.getElementById("holidayPay").innerText = (data.holidayPay || 0).toFixed(2);
+						document.getElementById("grossPay").innerText = (data.grossPay || 0).toFixed(2);
+						document.getElementById("netPay").innerText = (data.netPay || 0).toFixed(2);
+						document.getElementById("totalField").innerText = (data.grossPay || 0).toFixed(2);
+						document.getElementById("taxField").innerText = (data.philhealth || 0).toFixed(2);
+						document.getElementById("sssField").innerText = (data.sss || 0).toFixed(2);
+						document.getElementById("philhealthField").innerText = (data.philhealth || 0).toFixed(2);
+						document.getElementById("pagibigField").innerText = (data.pagibig || 0).toFixed(2);
+						document.getElementById("loanField").innerText = (data.loans || 0).toFixed(2);
+
+						// Combine cash advance and other deductions
+						const otherDeductions = (data.cashAdvance || 0) + (data.otherDeductions || 0);
+						document.getElementById("otherDeductionsField").innerText = otherDeductions.toFixed(2);
+
+						// Calculate total deductions
+						const totalDeductions = (data.sss || 0) + (data.philhealth || 0) +
+							(data.pagibig || 0) + (data.loans || 0) +
+							otherDeductions;
+						document.getElementById("totalDeductions").innerText = totalDeductions.toFixed(2);
+
+						new bootstrap.Modal(document.getElementById("detailsModal")).show();
+					})
+					.catch(error => {
+						console.error("Error:", error);
+						const employeeName = row.cells[1].innerText || "Unknown Employee";
+						document.getElementById("employeeName").innerText = employeeName;
+						document.getElementById("receivedBy").innerText = employeeName;
+						new bootstrap.Modal(document.getElementById("detailsModal")).show();
+					});
 			}
 		});
 

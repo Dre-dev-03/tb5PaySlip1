@@ -12,8 +12,8 @@ using tb5payroll.Data;
 namespace tb5payroll.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250319021515_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250328040216_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
