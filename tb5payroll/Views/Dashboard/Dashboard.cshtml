@@ -6,12 +6,27 @@
 
 <h2 class="text-left mb-4">Employee Dashboard</h2>
 
-<!-- Search Bar -->
-<div class="mb-3 d-flex justify-content-between">
-	<input type="text" id="searchInput" class="form-control w-25" placeholder="Search Employee..." onkeyup="searchEmployee()">
-	<button class="btn btn-primary">Print All</button>
-	<input type="file" id="excelFileInput" class="form-control w-25" accept=".xlsx, .xls" />
-	<select id="sheetSelect" class="form-select w-25" disabled>
+<!-- Replace the controls section with this -->
+<div class="dashboard-controls mb-3">
+	<!-- Search Input -->
+	<input type="text" id="searchInput" class="form-control" placeholder="Search Employee..." onkeyup="searchEmployee()">
+
+	<!-- Print Button -->
+	<button id="printAllBtn" class="btn btn-primary">Print All</button>
+
+	<!-- File Input with custom styling -->
+	<div class="file-input-container">
+		<div class="custom-file-input">
+			<input type="file" id="excelFileInput" accept=".xlsx">
+			<label for="excelFileInput" class="custom-file-input-label">
+				<span id="fileInputLabel">Choose File</span>
+				<i class="fas fa-upload ms-2"></i>
+			</label>
+		</div>
+	</div>
+
+	<!-- Sheet Select -->
+	<select id="sheetSelect" class="form-select" disabled>
 		<option>Choose Sheet</option>
 	</select>
 </div>
@@ -84,7 +99,7 @@
 					<tr>
 						<td colspan="7">&nbsp;</td>
 						<td colspan="2">GROSS PAY</td>
-						<td id="grossPay">0.00</td>
+						<td id="grossPay" data-field="grossPay">0.00</td>
 					</tr>
 					<tr>
 						<td>REGULAR</td>
@@ -95,7 +110,7 @@
 						<td>W/H TAX</td>
 						<td id="taxField" data-editable="true" data-field="sss">0.00</td>
 						<td colspan="2">DEDUCTION</td>
-						<td id="totalDeductions">0.00</td>
+						<td id="totalDeductions" data-field="totalDeductions">0.00</td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
@@ -116,7 +131,7 @@
 						<td>PHILHEALTH</td>
 						<td id="philhealthField" data-editable="true" data-field="philhealth">0.00</td>
 						<th colspan="2">TOTAL</th>
-						<td id="totalField">0.00</td>
+						<td id="totalField" data-field=totalField>0.00</td>
 					</tr>
 					<tr>
 						<td>OTHERS</td>
@@ -127,7 +142,7 @@
 						<td>PAG-IBIG</td>
 						<td id="pagibigField" data-editable="true" data-field="pagibig">0.00</td>
 						<td colspan="2">NET PAY</td>
-						<td id="netPay">0.00</td>
+						<td id="netPay" data-field="netPay">0.00</td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
@@ -387,7 +402,7 @@
 			});
 		});
 	}
-	
+
 	document.addEventListener("DOMContentLoaded", function () {
 		let currentPage = 0;
 		const rowsPerPage = 7;
@@ -452,16 +467,13 @@
 						document.getElementById("pagibigField").innerText = (data.pagibig || 0).toFixed(2);
 						document.getElementById("loanField").innerText = (data.loans || 0).toFixed(2);
 						document.getElementById("hoursWorkedField").innerText = data.hoursWorked.toFixed(2); 
-
-						// Combine cash advance and other deductions
-						const otherDeductions = (data.cashAdvance || 0) + (data.otherDeductions || 0);
-						document.getElementById("otherDeductionsField").innerText = otherDeductions.toFixed(2);
-
+						
 						// Calculate total deductions
-						const totalDeductions = (data.sss || 0) + (data.philhealth || 0) +
-							(data.pagibig || 0) + (data.loans || 0) +
-							otherDeductions;
+						const totalDeductions = (data.sss || 0) + (data.philhealth || 0) + (data.pagibig || 0) + (data.loans || 0) + (data.cashAdvance || 0);
 						document.getElementById("totalDeductions").innerText = totalDeductions.toFixed(2);
+
+						const netPay = (data.grossPay || 0) - totalDeductions;
+						document.getElementById("netPay").innerText = netPay.toFixed(2);
 
 						new bootstrap.Modal(document.getElementById("detailsModal")).show();
 					})
@@ -478,7 +490,12 @@
 		// Handle File Upload & Sheet Selection
 		document.getElementById("excelFileInput").addEventListener("change", function (event) {
 			const file = event.target.files[0];
+			const fileLabel = document.getElementById("fileInputLabel"); // Get the label element
+
 			if (file) {
+				// Update the file input label
+				fileLabel.textContent = file.name;
+
 				const formData = new FormData();
 				formData.append("file", file);
 
@@ -495,7 +512,14 @@
 						});
 						sheetSelect.disabled = false;
 					})
-					.catch(error => console.error("Error fetching sheets:", error));
+					.catch(error => {
+						console.error("Error fetching sheets:", error);
+						// Reset the label if there's an error
+						fileLabel.textContent = "Choose File";
+					});
+			} else {
+				// Reset if no file selected
+				fileLabel.textContent = "Choose File";
 			}
 		});
 

@@ -1,6 +1,115 @@
-﻿
+﻿/* Search and Filter Controls */
+.dashboard-controls {
+    display: flex;
+    gap: 10px;
+    align-items: baseline; /* Changed from center */
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
 
-/* Logo and Text Styling */
+.dashboard-controls > * {
+    height: 38px !important; /* Force height */
+    margin: 0 !important;    /* Remove margins */
+    vertical-align: middle !important;
+}
+
+/* File Input Specific Fix */
+#excelFileInput {
+    padding: 8px 12px; /* Match Bootstrap's form-control padding */
+    line-height: 1.5;  /* Match Bootstrap's line height */
+    display: inline-flex;
+    align-items: center;
+    height: 38px; /* Match other controls */
+}
+
+.dashboard-controls .form-control,
+.dashboard-controls .form-select,
+.dashboard-controls .btn {
+    height: 38px; /* Consistent height */
+    margin: 0; /* Remove any default margins */
+}
+
+/* File Input Container - ensures proper alignment */
+.file-input-container {
+    flex: 1 1 250px;
+    position: relative;
+    height: 38px; /* Match other controls */
+}
+
+/* Custom file input wrapper */
+.custom-file-input {
+    position: relative;
+    height: 100%;
+}
+
+/* Hide the native file input */
+.custom-file-input input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* Custom styled label */
+.custom-file-input-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    height: 100%;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out;
+}
+
+/* Hover/focus states */
+.custom-file-input-label:hover {
+    border-color: #86b7fe;
+}
+.custom-file-input:focus-within .custom-file-input-label {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Text styling */
+#fileInputLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-grow: 1;
+}
+
+/* Upload icon */
+.custom-file-input-label .fa-upload {
+    color: #495057;
+    margin-left: 8px;
+}
+
+/* Make the search input flexible */
+#searchInput {
+    flex: 1 1 200px;
+}
+
+/* Make the file input container flexible */
+.file-input-container {
+    flex: 1 1 250px;
+    position: relative;
+}
+
+/* Sheet select styling */
+#sheetSelect {
+    flex: 1 1 180px;
+}
+
+/* Print button styling */
+#printAllBtn {
+    white-space: nowrap;
+}
+
 .logo-container {
     display: flex;
     align-items: center;
@@ -82,6 +191,14 @@
     min-width: 900px;
 }
 
+.table-responsive {
+    max-height: 70vh; /* 70% of viewport height */
+    overflow-y: auto; /* Vertical scroll only */
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+/* Remove any existing pagination-related styles */
 /* Payslip Table Styles */
 .payslip-table {
     width: 100%;
