@@ -206,6 +206,7 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
             public int Holiday { get; set; }
             public int Overtime { get; set; }
             public int HoursWorked { get; set; }
+            
         }
     }
 }
