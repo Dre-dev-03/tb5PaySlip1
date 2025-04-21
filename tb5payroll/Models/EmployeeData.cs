@@ -44,5 +44,17 @@ namespace tb5payroll.Models
 
         [Column("philHealthEmployeeData")]
         public decimal? PhilHealthEmployeeData { get; set; }
+        
+        [Column("taxEmployeeData")]
+        public decimal? TaxEmployeeData { get; set; }
+        
+        [Column("calculatedPayEmployeeData")]
+        public decimal? CalculatedPayEmployeeData { get; set; }
+        
+        [Column("lateDeductionEmployeeData")]
+        public decimal? LateDeductionEmployeeData { get; set; }
+        
+        [Column("underTimeDeductionEmployeeData")]
+        public decimal? UnderTimeEmployeeData { get; set; }
     }
 }

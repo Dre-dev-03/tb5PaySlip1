@@ -222,23 +222,33 @@ namespace tb5payroll.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("tb5payroll.Models.EmployeeData", b =>
+            modelBuilder.Entity("tb5payroll.Models.EmployeeArchive", b =>
                 {
                     b.Property<string>("IdEmployeeData")
                         .HasColumnType("varchar(255)")
                         .HasColumnName("idEmployeeData");
 
-                    b.Property<decimal>("BasePayEmployeeData")
+                    b.Property<decimal?>("BasePayEmployeeData")
+                        .IsRequired()
                         .HasColumnType("decimal(65,30)")
                         .HasColumnName("basePayEmployeeData");
 
-                    b.Property<int>("BirthdayEmployeeData")
+                    b.Property<int?>("BirthdayEmployeeData")
+                        .IsRequired()
                         .HasColumnType("int")
                         .HasColumnName("birthdayEmployeeData");
+
+                    b.Property<decimal?>("CalculatedPayEmployeeData")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("calculatedPayEmployeeData");
 
                     b.Property<decimal?>("CashAdvEmployeeData")
                         .HasColumnType("decimal(7,2)")
                         .HasColumnName("cashAdvEmployeeData");
+
+                    b.Property<string>("EmployeeArchiveData")
+                        .HasColumnType("longtext")
+                        .HasColumnName("employeeArchiveData");
 
                     b.Property<decimal?>("HolidayHoursEmployeeData")
                         .HasColumnType("decimal(4,1)")
@@ -273,13 +283,129 @@ namespace tb5payroll.Migrations
                         .HasColumnType("decimal(6,2)")
                         .HasColumnName("sssEmployeeData");
 
+                    b.Property<decimal?>("TaxEmployeeData")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("taxEmployeeData");
+
                     b.Property<decimal?>("TrainingEmployeeData")
                         .HasColumnType("decimal(7,2)")
                         .HasColumnName("trainingEmployeeData");
 
                     b.HasKey("IdEmployeeData");
 
+                    b.ToTable("EmployeeArchive");
+                });
+
+            modelBuilder.Entity("tb5payroll.Models.EmployeeData", b =>
+                {
+                    b.Property<string>("IdEmployeeData")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("idEmployeeData");
+
+                    b.Property<decimal>("BasePayEmployeeData")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("basePayEmployeeData");
+
+                    b.Property<int>("BirthdayEmployeeData")
+                        .HasColumnType("int")
+                        .HasColumnName("birthdayEmployeeData");
+
+                    b.Property<decimal?>("CalculatedPayEmployeeData")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("calculatedPayEmployeeData");
+
+                    b.Property<decimal?>("CashAdvEmployeeData")
+                        .HasColumnType("decimal(7,2)")
+                        .HasColumnName("cashAdvEmployeeData");
+
+                    b.Property<decimal?>("HolidayHoursEmployeeData")
+                        .HasColumnType("decimal(4,1)")
+                        .HasColumnName("holidayHoursEmployeeData");
+
+                    b.Property<decimal?>("HoursWorkedEmployeeData")
+                        .HasColumnType("decimal(4,1)")
+                        .HasColumnName("hoursWorkedEmployeeData");
+
+                    b.Property<decimal?>("LateDeductionEmployeeData")
+                        .HasColumnType("decimal(7,2)")
+                        .HasColumnName("lateDeductionEmployeeData");
+
+                    b.Property<decimal?>("LoanEmployeeData")
+                        .HasColumnType("decimal(7,2)")
+                        .HasColumnName("loanEmployeeData");
+
+                    b.Property<string>("NameEmployeeData")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("nameEmployeeData");
+
+                    b.Property<decimal?>("OvertimeHoursEmployeeData")
+                        .HasColumnType("decimal(4,1)")
+                        .HasColumnName("overtimeHoursEmployeeData");
+
+                    b.Property<decimal?>("PagIbigEmployeeData")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("pagIbigEmployeeData");
+
+                    b.Property<decimal?>("PhilHealthEmployeeData")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("philHealthEmployeeData");
+
+                    b.Property<decimal?>("SssEmployeeData")
+                        .HasColumnType("decimal(6,2)")
+                        .HasColumnName("sssEmployeeData");
+
+                    b.Property<decimal?>("TaxEmployeeData")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("taxEmployeeData");
+
+                    b.Property<decimal?>("TrainingEmployeeData")
+                        .HasColumnType("decimal(7,2)")
+                        .HasColumnName("trainingEmployeeData");
+
+                    b.Property<decimal?>("UnderTimeEmployeeData")
+                        .HasColumnType("decimal(7,2)")
+                        .HasColumnName("underTimeDeductionEmployeeData");
+
+                    b.HasKey("IdEmployeeData");
+
                     b.ToTable("EmployeeData");
+                });
+
+            modelBuilder.Entity("tb5payroll.Models.TimeSetData", b =>
+                {
+                    b.Property<string>("TimeSet")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("timeSetData");
+
+                    b.Property<int?>("EarlyOutThreshold")
+                        .HasColumnType("int")
+                        .HasColumnName("earlyoutThreshold");
+
+                    b.Property<decimal?>("HalfdayMultiplier")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("halfdayMultiplier");
+
+                    b.Property<string>("IdEmployeeData")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("idEmployeeData");
+
+                    b.Property<decimal?>("OvertimeMultiplier")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("overtimeMultiplier");
+
+                    b.Property<int?>("OvertimeThreshold")
+                        .HasColumnType("int")
+                        .HasColumnName("overtimeThreshold");
+
+                    b.Property<int?>("UndertimeThreshold")
+                        .HasColumnType("int")
+                        .HasColumnName("undertimeThreshold");
+
+                    b.HasKey("TimeSet");
+
+                    b.ToTable("TimeSetData");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

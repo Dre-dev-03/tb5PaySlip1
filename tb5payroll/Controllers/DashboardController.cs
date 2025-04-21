@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using tb5payroll.Data;
+using tb5payroll.Models;
 
-namespace tb5payroll.Controllers
-{
+namespace tb5payroll.Controllers;
+
+
     public class DashboardController : Controller
     {
         public IActionResult Dashboard()
@@ -18,7 +20,6 @@ namespace tb5payroll.Controllers
         {
             _context = context;
         }
-        
         [HttpPost]
         public async Task<IActionResult> GetSheets()
         {
@@ -209,4 +210,3 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
             
         }
     }
-}
