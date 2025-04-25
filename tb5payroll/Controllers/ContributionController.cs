@@ -50,7 +50,7 @@ public async Task<IActionResult> ApplyContributions([FromBody] ContributionModel
         }
 
         // Update employee contributions
-        if (model.WHTax.HasValue) employee.SssEmployeeData = model.WHTax.Value;
+        if (model.WHTax.HasValue) employee.TaxEmployeeData = model.WHTax.Value;
         if (model.PagIbig.HasValue) employee.PagIbigEmployeeData = model.PagIbig.Value;
         if (model.SSS.HasValue) employee.SssEmployeeData = model.SSS.Value;
         if (model.PhilHealth.HasValue) employee.PhilHealthEmployeeData = model.PhilHealth.Value; // Add this line
@@ -81,7 +81,7 @@ public async Task<IActionResult> ApplyToAll([FromBody] ContributionModel model)
         
         foreach (var employee in allEmployees)
         {
-            if (model.WHTax.HasValue) employee.SssEmployeeData = model.WHTax.Value;
+            if (model.WHTax.HasValue) employee.TaxEmployeeData = model.WHTax.Value;
             if (model.PagIbig.HasValue) employee.PagIbigEmployeeData = model.PagIbig.Value;
             if (model.SSS.HasValue) employee.SssEmployeeData = model.SSS.Value;
             if (model.PhilHealth.HasValue) employee.PhilHealthEmployeeData = model.PhilHealth.Value; // Add this line
@@ -141,7 +141,8 @@ public async Task<IActionResult> ApplyToAll([FromBody] ContributionModel model)
                 philHealthEmployeeData = employee.PhilHealthEmployeeData,
                 cashAdvEmployeeData = employee.CashAdvEmployeeData,
                 loanEmployeeData = employee.LoanEmployeeData,
-                trainingEmployeeData = employee.TrainingEmployeeData
+                trainingEmployeeData = employee.TrainingEmployeeData,
+                taxEmployeeData = employee.TaxEmployeeData
             });
         }
         public class ContributionModel
@@ -154,6 +155,8 @@ public async Task<IActionResult> ApplyToAll([FromBody] ContributionModel model)
             public decimal? Tardiness { get; set; }
             public decimal? Loan { get; set; }
             public decimal? Others { get; set; }
+            
+
         }
     }
 }

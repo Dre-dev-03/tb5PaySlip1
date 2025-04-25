@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
 	Layout = "_DashboardLayout";
 	ViewBag.Title = "Dashboard";
 }
@@ -12,7 +11,9 @@
 	<input type="text" id="searchInput" class="form-control" placeholder="Search Employee..." onkeyup="searchEmployee()">
 
 	<!-- Print Button -->
-	<button id="printAllBtn" class="btn btn-primary">Print All</button>
+	<button id="archiveBtn" class="btn btn-warning">
+		<i class="fas fa-archive"></i> Archive Current Data
+	</button>
 
 	<!-- File Input with custom styling -->
 	<div class="file-input-container">
@@ -411,6 +412,81 @@
 		let allRows = Array.from(tbody.rows);
 		let filteredRows = [...allRows];
 
+		async function loadInitialData() {
+			const tableContainer = document.querySelector('.table-responsive');
+
+			// Create overlay div - this will be our only loading indicator
+			const overlay = document.createElement('div');
+			overlay.className = 'position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-light bg-opacity-75';
+			overlay.style.zIndex = '10';
+
+			// Create larger spinner
+			overlay.innerHTML = '<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div>';
+
+			// Add to container
+			tableContainer.style.position = 'relative';
+			tableContainer.appendChild(overlay);
+
+			try {
+				const response = await fetch('/Dashboard/GetInitialData');
+				const result = await response.json();
+
+				if (!response.ok) {
+					throw new Error(result.message || 'Failed to load data');
+				}
+
+				if (!result.success) {
+					showEmptyState(result.message || 'No employee data available');
+					return;
+				}
+
+				tbody.innerHTML = "";
+				result.data.forEach(employee => {
+					const row = document.createElement("tr");
+					row.innerHTML = `
+                <td>${employee.id}</td>
+                <td><a href="#">${employee.name}</a></td>
+                <td>${employee.workday}</td> 
+                <td>${employee.holiday}</td>
+                <td>${employee.overtime}</td>
+                <td>${employee.hoursWorked}</td>
+                <td>
+                    <button class="btn btn-primary btn-view">View</button>
+                    <button class="btn btn-warning btn-view">Edit</button>
+                    <button class="btn btn-danger btn-delete">Delete</button>
+                </td>
+            `;
+					tbody.appendChild(row);
+				});
+
+				allRows = Array.from(tbody.rows);
+				filteredRows = [...allRows];
+				showPage(1);
+				adjustFontSizeToFit(document.getElementById("employeeTable"));
+
+			} catch (error) {
+				console.error("Error loading initial data:", error);
+				showEmptyState(error.message || 'Failed to load employee data');
+			} finally {
+				overlay.remove();
+			}
+		}
+
+		function showEmptyState(message) {
+			tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center py-4">
+                <div class="text-muted">${message}</div>
+                <small class="text-muted">Upload an Excel file to view data</small>
+            </td>
+        </tr>
+    `;
+			allRows = Array.from(tbody.rows);
+			filteredRows = [...allRows];
+			showPage(1);
+		}
+		
+		
 		function totalPages() {
 			return Math.ceil(filteredRows.length / rowsPerPage);
 		}
@@ -461,7 +537,7 @@
 						document.getElementById("grossPay").innerText = (data.grossPay || 0).toFixed(2);
 						document.getElementById("netPay").innerText = (data.netPay || 0).toFixed(2);
 						document.getElementById("totalField").innerText = (data.grossPay || 0).toFixed(2);
-						document.getElementById("taxField").innerText = (data.philhealth || 0).toFixed(2);
+						document.getElementById("taxField").innerText = (data.tax || 0).toFixed(2);
 						document.getElementById("sssField").innerText = (data.sss || 0).toFixed(2);
 						document.getElementById("philhealthField").innerText = (data.philhealth || 0).toFixed(2);
 						document.getElementById("pagibigField").innerText = (data.pagibig || 0).toFixed(2);
@@ -469,7 +545,7 @@
 						document.getElementById("hoursWorkedField").innerText = data.hoursWorked.toFixed(2); 
 						
 						// Calculate total deductions
-						const totalDeductions = (data.sss || 0) + (data.philhealth || 0) + (data.pagibig || 0) + (data.loans || 0) + (data.cashAdvance || 0);
+						const totalDeductions = (data.sss || 0) + (data.philhealth || 0) + (data.pagibig || 0) + (data.loans || 0) + (data.cashAdvance || 0) + (data.tax || 0);
 						document.getElementById("totalDeductions").innerText = totalDeductions.toFixed(2);
 
 						const netPay = (data.grossPay || 0) - totalDeductions;
@@ -487,6 +563,60 @@
 			}
 		});
 
+        document.getElementById('archiveBtn').addEventListener('click', async function() {
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+
+            // Set loading state
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Archiving...';
+
+            try {
+                if (!confirm('This will create a complete snapshot of all current employee data. Continue?')) {
+                    return;
+                }
+
+                const response = await fetch('/Dashboard/ArchiveCurrentData', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                console.log("Archive result:", result);
+
+                if (result.success) {
+                    // Success notification
+                    const successMsg = `Archived ${result.count} employees\n` +
+                        `Including: Basic info, Hours, Pay, Deductions, etc.`;
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Success!', successMsg, 'success');
+                    } else {
+                        alert(successMsg);
+                    }
+                } else {
+                    // Show detailed error
+                    console.error("Archive failed:", result.errorDetails);
+                    const errorMsg = result.message +
+                        (result.errorDetails ? '\n\nTechnical details:\n' + result.errorDetails : '');
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error!', errorMsg, 'error');
+                    } else {
+                        alert(errorMsg);
+                    }
+                }
+            } catch (error) {
+                console.error('Archive error:', error);
+                alert('Archive failed: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+		
 		// Handle File Upload & Sheet Selection
 		document.getElementById("excelFileInput").addEventListener("change", function (event) {
 			const file = event.target.files[0];
@@ -541,7 +671,7 @@
 							row.innerHTML = `
                 <td>${employee.id}</td>
                 <td><a href="#">${employee.name}</a></td>
-                <td>${employee.workday}</td> <!-- Changed from department to workday -->
+                <td>${employee.workday}</td> 
                 <td>${employee.holiday}</td>
                 <td>${employee.overtime}</td>
                 <td>${employee.hoursWorked}</td>
@@ -560,6 +690,6 @@
 						adjustFontSizeToFit(document.getElementById("employeeTable"));
 					})
 			}
-		});
+		}); loadInitialData();
 	});
 </script>

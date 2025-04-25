@@ -20,6 +20,39 @@ namespace tb5payroll.Controllers;
         {
             _context = context;
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> GetInitialData()
+        {
+            try
+            {
+                var employees = await _context.EmployeeData
+                    .Where(e => e.HoursWorkedEmployeeData != null) // Only include employees with data
+                    .Select(e => new Employee
+                    {
+                        Id = e.BirthdayEmployeeData.ToString(),
+                        Name = e.NameEmployeeData ?? "Unknown",
+                        Workday = "", // Default value since this comes from Excel
+                        Holiday = (int)(e.HolidayHoursEmployeeData ?? 0),
+                        Overtime = (int)(e.OvertimeHoursEmployeeData ?? 0),
+                        HoursWorked = (int)(e.HoursWorkedEmployeeData ?? 0)
+                    })
+                    .ToListAsync();
+
+                if (!employees.Any())
+                {
+                    return Json(new { success = false, message = "No employee data found" });
+                }
+
+                return Json(new { success = true, data = employees });
+            }
+            catch (Exception ex)
+            {
+                // Log the error (you should implement proper logging here)
+                return StatusCode(500, new { success = false, message = "Error loading initial data", error = ex.Message });
+            }
+        }
+        
         [HttpPost]
         public async Task<IActionResult> GetSheets()
         {
@@ -141,7 +174,6 @@ public async Task<IActionResult> GetData(string sheetName)
     }
 }
 
-// Add this new method for getting employee details
 [HttpGet]
 public async Task<IActionResult> GetEmployeeDetails(string id)
 {
@@ -168,9 +200,9 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
             decimal loans = employee.LoanEmployeeData ?? 0;
             decimal cashAdvance = employee.CashAdvEmployeeData ?? 0;
             decimal philhealth = employee.PhilHealthEmployeeData ?? 0;
-
+            decimal tax = employee.TaxEmployeeData ?? 0;
             decimal grossPay = (basePay * hoursWorked) + trainingPay + overtimePay + holidayPay;
-            decimal deductions = sss + pagibig + loans + cashAdvance + philhealth;
+            decimal deductions = sss + pagibig + loans + cashAdvance + philhealth + tax;
             decimal netPay = grossPay - deductions;
 
             return Json(new 
@@ -188,6 +220,7 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
                 cashAdvance,
                 philhealth,
                 grossPay,
+                tax,
                 netPay
             });
         }
@@ -198,7 +231,94 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
         return StatusCode(500, $"Internal server error: {ex.Message}");
     }
 }
+[HttpPost]
+public async Task<IActionResult> ArchiveCurrentData()
+{
+    try
+    {
+        // Get all current employees with all fields
+        var currentEmployees = await _context.EmployeeData
+            .AsNoTracking()
+            .ToListAsync();
 
+        if (!currentEmployees.Any())
+        {
+            return Json(new { success = false, message = "No employees found to archive" });
+        }
+
+        var archiveEntries = new List<EmployeeArchive>();
+        var archiveDate = DateTime.Now;
+
+        foreach (var employee in currentEmployees)
+        {
+            var archiveEntry = new EmployeeArchive
+            {
+                // Required fields
+                ArchiveId = Guid.NewGuid().ToString(),
+                IdEmployeeData = employee.IdEmployeeData ?? throw new Exception("Missing IdEmployeeData"),
+                EmployeeArchiveDate = archiveDate,
+                NameEmployeeData = employee.NameEmployeeData ?? "Unknown",
+                
+                // Personal information
+                BirthdayEmployeeData = employee.BirthdayEmployeeData,
+                
+                // Pay information
+                BasePayEmployeeData = employee.BasePayEmployeeData,
+                HoursWorkedEmployeeData = employee.HoursWorkedEmployeeData,
+                OvertimeHoursEmployeeData = employee.OvertimeHoursEmployeeData,
+                HolidayHoursEmployeeData = employee.HolidayHoursEmployeeData,
+                TrainingEmployeeData = employee.TrainingEmployeeData,
+                
+                // Deductions
+                CashAdvEmployeeData = employee.CashAdvEmployeeData,
+                LoanEmployeeData = employee.LoanEmployeeData,
+                SssEmployeeData = employee.SssEmployeeData,
+                PagIbigEmployeeData = employee.PagIbigEmployeeData,
+                PhilHealthEmployeeData = employee.PhilHealthEmployeeData,
+                TaxEmployeeData = employee.TaxEmployeeData, 
+                CalculatedPayEmployeeData = employee.CalculatedPayEmployeeData,
+                //LateDeductionEmployeeData = employee.LateDeductionEmployeeData,
+                //UnderTimeEmployeeData = employee.UnderTimeEmployeeData
+            };
+
+            archiveEntries.Add(archiveEntry);
+        }
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            await _context.EmployeeArchive.AddRangeAsync(archiveEntries);
+            int recordsSaved = await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Json(new { 
+                success = true,
+                message = $"Successfully archived {recordsSaved} employee records",
+                count = recordsSaved
+            });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw; // This will be caught by the outer try-catch
+        }
+    }
+    catch (Exception ex)
+    {
+        // Get the root cause error
+        var rootEx = ex;
+        while (rootEx.InnerException != null) 
+        {
+            rootEx = rootEx.InnerException;
+        }
+        
+        return Json(new {
+            success = false,
+            message = $"Archive failed: {rootEx.Message}",
+            errorDetails = ex.ToString()
+        });
+    }
+}
         public class Employee
         {
             public string Id { get; set; }
@@ -207,6 +327,7 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
             public int Holiday { get; set; }
             public int Overtime { get; set; }
             public int HoursWorked { get; set; }
+            
             
         }
     }

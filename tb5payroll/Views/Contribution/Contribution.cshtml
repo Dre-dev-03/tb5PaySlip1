@@ -114,8 +114,7 @@
 	</div>
 </div>
 
-@section Scripts {
-	<script>
+<script>
 		// Load all employees when page loads
 		document.addEventListener('DOMContentLoaded', function() {
 			loadAllEmployees();
@@ -159,7 +158,7 @@
 				document.getElementById('selectedEmployeeName').textContent = employee.name;
 
 				// Display current values
-				document.getElementById('wh-tax').value = employee.sssEmployeeData || '';
+				document.getElementById('wh-tax').value = employee.taxEmployeeData || '';
 				document.getElementById('pag-ibig').value = employee.pagIbigEmployeeData || '';
 				document.getElementById('sss').value = employee.sssEmployeeData || '';
 				document.getElementById('philhealth').value = employee.philHealthEmployeeData || '';
@@ -168,7 +167,7 @@
 				document.getElementById('others').value = employee.trainingEmployeeData || '';
 
 				// Show current values
-				document.getElementById('current-wh-tax').textContent = formatCurrency(employee.sssEmployeeData);
+				document.getElementById('current-wh-tax').textContent = formatCurrency(employee.taxEmployeeData);
 				document.getElementById('current-pag-ibig').textContent = formatCurrency(employee.pagIbigEmployeeData);
 				document.getElementById('current-sss').textContent = formatCurrency(employee.sssEmployeeData);
 				document.getElementById('current-philhealth').textContent = formatCurrency(employee.philHealthEmployeeData);
@@ -260,4 +259,3 @@
 			}
 }
 	</script>
-}

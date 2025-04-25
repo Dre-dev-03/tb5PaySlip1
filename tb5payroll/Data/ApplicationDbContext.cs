@@ -47,22 +47,24 @@ namespace tb5payroll.Data
             // Configure the EmployeeArchive table
             modelBuilder.Entity<EmployeeArchive>(entity =>
             {
-                entity.HasKey(e => e.IdEmployeeData);
-                entity.Property(e => e.IdEmployeeData).IsRequired();
-                entity.Property(e => e.BirthdayEmployeeData).IsRequired();
-                entity.Property(e => e.NameEmployeeData).IsRequired();
-                entity.Property(e => e.BasePayEmployeeData).IsRequired();
-                entity.Property(e => e.HoursWorkedEmployeeData).HasColumnType("decimal(4,1)");
-                entity.Property(e => e.OvertimeHoursEmployeeData).HasColumnType("decimal(4,1)");
-                entity.Property(e => e.HolidayHoursEmployeeData).HasColumnType("decimal(4,1)");
-                entity.Property(e => e.TrainingEmployeeData).HasColumnType("decimal(7,2)");
-                entity.Property(e => e.CashAdvEmployeeData).HasColumnType("decimal(7,2)");
-                entity.Property(e => e.LoanEmployeeData).HasColumnType("decimal(7,2)");
-                entity.Property(e => e.SssEmployeeData).HasColumnType("decimal(6,2)");
-                entity.Property(e => e.PagIbigEmployeeData).HasColumnType("decimal(6,2)");
-                entity.Property(e => e.PhilHealthEmployeeData).HasColumnType("decimal(6,2)");
-                entity.Property(e => e.CalculatedPayEmployeeData).HasColumnType("decimal(10,2)");
-                entity.Property(e => e.TaxEmployeeData).HasColumnType("decimal(10,2)");
+                entity.HasKey(e => e.ArchiveId);
+                entity.Property(e => e.ArchiveId).HasColumnName("archiveId");
+                entity.Property(e => e.IdEmployeeData).HasColumnName("idEmployeeData");
+                entity.Property(e => e.EmployeeArchiveDate).HasColumnName("employeeArchiveDate").HasColumnType("datetime");
+                entity.Property(e => e.BirthdayEmployeeData).HasColumnName("birthdayEmployeeData");
+                entity.Property(e => e.NameEmployeeData).HasColumnName("nameEmployeeData");
+                entity.Property(e => e.BasePayEmployeeData).HasColumnName("basePayEmployeeData");
+                entity.Property(e => e.HoursWorkedEmployeeData).HasColumnName("hoursWorkedEmployeeData").HasColumnType("decimal(4,1)");
+                entity.Property(e => e.OvertimeHoursEmployeeData).HasColumnName("overtimeHoursEmployeeData").HasColumnType("decimal(4,1)");
+                entity.Property(e => e.HolidayHoursEmployeeData).HasColumnName("holidayHoursEmployeeData").HasColumnType("decimal(4,1)");
+                entity.Property(e => e.TrainingEmployeeData).HasColumnName("trainingEmployeeData").HasColumnType("decimal(7,2)");
+                entity.Property(e => e.CashAdvEmployeeData).HasColumnName("cashAdvEmployeeData").HasColumnType("decimal(7,2)");
+                entity.Property(e => e.LoanEmployeeData).HasColumnName("loanEmployeeData").HasColumnType("decimal(7,2)");
+                entity.Property(e => e.SssEmployeeData).HasColumnName("sssEmployeeData").HasColumnType("decimal(6,2)");
+                entity.Property(e => e.PagIbigEmployeeData).HasColumnName("pagIbigEmployeeData").HasColumnType("decimal(6,2)");
+                entity.Property(e => e.PhilHealthEmployeeData).HasColumnName("philHealthEmployeeData").HasColumnType("decimal(6,2)");
+                entity.Property(e => e.TaxEmployeeData).HasColumnName("taxEmployeeData").HasColumnType("decimal(10,2)");
+                entity.Property(e => e.CalculatedPayEmployeeData).HasColumnName("calculatedPayEmployeeData").HasColumnType("decimal(10,2)");
             });
             modelBuilder.Entity<TimeSetData>(entity =>
             {

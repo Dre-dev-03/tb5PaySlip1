@@ -5,19 +5,23 @@ namespace tb5payroll.Models;
 
 public class EmployeeArchive
 {
+
     [Key]
-    [Column("employeeArchiveData")]
-    public required string EmployeeArchiveData { get; set; }
+    [Column("archiveId")]
+    public string? ArchiveId { get; set; }
     
     [ForeignKey(nameof(EmployeeData))]
     [Column("idEmployeeData")]
-    public required string IdEmployeeData { get; set; }
+    public string? IdEmployeeData { get; set; }
+    
+    [Column("employeeArchiveDate")]
+    public DateTime EmployeeArchiveDate { get; set; }
     
     [Column("birthdayEmployeeData")]
     public int? BirthdayEmployeeData { get; set; }
 
     [Column("nameEmployeeData")]
-    public required string NameEmployeeData { get; set; }
+    public string? NameEmployeeData { get; set; }
     
     [Column("basePayEmployeeData")]
     public decimal? BasePayEmployeeData { get; set; }

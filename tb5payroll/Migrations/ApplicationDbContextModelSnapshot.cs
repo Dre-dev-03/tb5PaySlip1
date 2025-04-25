@@ -224,17 +224,15 @@ namespace tb5payroll.Migrations
 
             modelBuilder.Entity("tb5payroll.Models.EmployeeArchive", b =>
                 {
-                    b.Property<string>("IdEmployeeData")
+                    b.Property<string>("ArchiveId")
                         .HasColumnType("varchar(255)")
-                        .HasColumnName("idEmployeeData");
+                        .HasColumnName("archiveId");
 
                     b.Property<decimal?>("BasePayEmployeeData")
-                        .IsRequired()
                         .HasColumnType("decimal(65,30)")
                         .HasColumnName("basePayEmployeeData");
 
                     b.Property<int?>("BirthdayEmployeeData")
-                        .IsRequired()
                         .HasColumnType("int")
                         .HasColumnName("birthdayEmployeeData");
 
@@ -246,9 +244,9 @@ namespace tb5payroll.Migrations
                         .HasColumnType("decimal(7,2)")
                         .HasColumnName("cashAdvEmployeeData");
 
-                    b.Property<string>("EmployeeArchiveData")
-                        .HasColumnType("longtext")
-                        .HasColumnName("employeeArchiveData");
+                    b.Property<DateTime>("EmployeeArchiveDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("employeeArchiveDate");
 
                     b.Property<decimal?>("HolidayHoursEmployeeData")
                         .HasColumnType("decimal(4,1)")
@@ -258,12 +256,15 @@ namespace tb5payroll.Migrations
                         .HasColumnType("decimal(4,1)")
                         .HasColumnName("hoursWorkedEmployeeData");
 
+                    b.Property<string>("IdEmployeeData")
+                        .HasColumnType("longtext")
+                        .HasColumnName("idEmployeeData");
+
                     b.Property<decimal?>("LoanEmployeeData")
                         .HasColumnType("decimal(7,2)")
                         .HasColumnName("loanEmployeeData");
 
                     b.Property<string>("NameEmployeeData")
-                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("nameEmployeeData");
 
@@ -291,7 +292,7 @@ namespace tb5payroll.Migrations
                         .HasColumnType("decimal(7,2)")
                         .HasColumnName("trainingEmployeeData");
 
-                    b.HasKey("IdEmployeeData");
+                    b.HasKey("ArchiveId");
 
                     b.ToTable("EmployeeArchive");
                 });
