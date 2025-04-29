@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using tb5payroll.Data;
 using tb5payroll.Models;
-using System.Globalization;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace tb5payroll.Controllers
 {
@@ -15,96 +17,158 @@ namespace tb5payroll.Controllers
             _context = context;
         }
 
-         public async Task<IActionResult> Archive()
-                {
-                    return View();
-                }
+        public IActionResult Archive()
+        {
+            return View();
+        }
 
         [HttpGet]
-        public async Task<IActionResult> GetArchivedData(int? month, int? year, string searchTerm = "")
+        public async Task<IActionResult> GetArchiveData(DateTime? startDate = null, DateTime? endDate = null)
         {
             try
             {
-                var query = _context.EmployeeArchive.AsQueryable();
+                IQueryable<EmployeeArchive> query = _context.EmployeeArchive
+                    .OrderByDescending(e => e.EmployeeArchiveDate);
 
-                // Apply month filter if provided
-                if (month.HasValue && month > 0)
+                // Apply date filters if provided
+                if (startDate.HasValue)
                 {
-                    query = query.Where(e => e.EmployeeArchiveDate.Month == month);
+                    query = query.Where(e => e.EmployeeArchiveDate >= startDate);
+                }
+                if (endDate.HasValue)
+                {
+                    query = query.Where(e => e.EmployeeArchiveDate <= endDate.Value.AddDays(1)); // Include entire end day
                 }
 
-                // Apply year filter if provided
-                if (year.HasValue && year > 0)
-                {
-                    query = query.Where(e => e.EmployeeArchiveDate.Year == year);
-                }
-
-                // Apply search filter if provided
-                if (!string.IsNullOrEmpty(searchTerm))
-                {
-                    searchTerm = searchTerm.ToLower();
-                    query = query.Where(e => 
-                        e.NameEmployeeData.ToLower().Contains(searchTerm) || 
-                        e.IdEmployeeData.ToLower().Contains(searchTerm));
-                }
-
-                var archivedEmployees = await query
-                    .OrderByDescending(e => e.EmployeeArchiveDate)
-                    .ThenBy(e => e.NameEmployeeData)
-                    .Select(e => new ArchivedEmployeeViewModel
+                var archiveData = await query
+                    .Select(e => new 
                     {
-                        ArchiveId = e.ArchiveId,
-                        EmployeeId = e.IdEmployeeData,
-                        Name = e.NameEmployeeData,
-                        Department = "TB5 STAFF", // Default or get from related table
-                        ArchiveDate = e.EmployeeArchiveDate.ToString("yyyy-MM-dd"),
-                        HolidayHours = e.HolidayHoursEmployeeData ?? 0,
-                        OvertimeHours = e.OvertimeHoursEmployeeData ?? 0,
-                        HoursWorked = e.HoursWorkedEmployeeData ?? 0,
-                        GrossPay = e.CalculatedPayEmployeeData ?? 0,
-                        BasePay = e.BasePayEmployeeData ?? 0
+                        e.ArchiveId,
+                        e.BirthdayEmployeeData,
+                        e.NameEmployeeData,
+                        e.EmployeeArchiveDate,
+                        e.HoursWorkedEmployeeData,
+                        e.OvertimeHoursEmployeeData,
+                        e.HolidayHoursEmployeeData,
+                        e.BasePayEmployeeData,
+                        e.CalculatedPayEmployeeData,
+                        e.SssEmployeeData,
+                        e.PhilHealthEmployeeData,
+                        e.PagIbigEmployeeData,
+                        e.LoanEmployeeData,
+                        e.TaxEmployeeData
                     })
                     .ToListAsync();
 
-                return Json(new { success = true, data = archivedEmployees });
+                if (!archiveData.Any())
+                {
+                    return Json(new { success = false, message = "No archive records found" });
+                }
+
+                return Json(new { success = true, data = archiveData });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return StatusCode(500, new { success = false, message = "Error loading archive data", error = ex.Message });
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetArchiveYears()
+        public async Task<IActionResult> GetArchiveDetails(string id, string date)
         {
             try
             {
-                var years = await _context.EmployeeArchive
-                    .Select(e => e.EmployeeArchiveDate.Year)
-                    .Distinct()
-                    .OrderByDescending(y => y)
-                    .ToListAsync();
+                if (int.TryParse(id, out int birthdayId) && DateTime.TryParse(date, out DateTime archiveDate))
+                {
+                    var archiveRecord = await _context.EmployeeArchive
+                        .FirstOrDefaultAsync(e => e.BirthdayEmployeeData == birthdayId && 
+                                                 e.EmployeeArchiveDate.Date == archiveDate.Date);
 
-                return Json(new { success = true, data = years });
+                    if (archiveRecord == null)
+                    {
+                        return NotFound("Archive record not found");
+                    }
+
+                    return Json(new 
+                    {
+                        nameEmployeeData = archiveRecord.NameEmployeeData,
+                        birthdayEmployeeData = archiveRecord.BirthdayEmployeeData,
+                        employeeArchiveDate = archiveRecord.EmployeeArchiveDate,
+                        basePayEmployeeData = archiveRecord.BasePayEmployeeData,
+                        hoursWorkedEmployeeData = archiveRecord.HoursWorkedEmployeeData,
+                        overtimeHoursEmployeeData = archiveRecord.OvertimeHoursEmployeeData,
+                        holidayHoursEmployeeData = archiveRecord.HolidayHoursEmployeeData,
+                        sssEmployeeData = archiveRecord.SssEmployeeData,
+                        philHealthEmployeeData = archiveRecord.PhilHealthEmployeeData,
+                        pagIbigEmployeeData = archiveRecord.PagIbigEmployeeData,
+                        loanEmployeeData = archiveRecord.LoanEmployeeData,
+                        taxEmployeeData = archiveRecord.TaxEmployeeData,
+                        calculatedPayEmployeeData = archiveRecord.CalculatedPayEmployeeData
+                    });
+                }
+                return BadRequest("Invalid parameters");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 
-        public class ArchivedEmployeeViewModel
+        [HttpPost]
+        public async Task<IActionResult> DeleteArchiveRecord(string archiveId)
         {
-            public string ArchiveId { get; set; }
-            public string EmployeeId { get; set; }
-            public string Name { get; set; }
-            public string Department { get; set; }
-            public string ArchiveDate { get; set; }
-            public decimal HolidayHours { get; set; }
-            public decimal OvertimeHours { get; set; }
-            public decimal HoursWorked { get; set; }
-            public decimal BasePay { get; set; }
-            public decimal GrossPay { get; set; }
+            try
+            {
+                var record = await _context.EmployeeArchive
+                    .FirstOrDefaultAsync(e => e.ArchiveId == archiveId);
+
+                if (record == null)
+                {
+                    return NotFound("Archive record not found");
+                }
+
+                _context.EmployeeArchive.Remove(record);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Archive record deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error deleting archive record", error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteOldRecords(DateTime cutoffDate)
+        {
+            try
+            {
+                var oldRecords = await _context.EmployeeArchive
+                    .Where(e => e.EmployeeArchiveDate < cutoffDate)
+                    .ToListAsync();
+
+                if (!oldRecords.Any())
+                {
+                    return Json(new { success = false, message = "No records found older than the specified date" });
+                }
+
+                _context.EmployeeArchive.RemoveRange(oldRecords);
+                int recordsDeleted = await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Successfully deleted {recordsDeleted} old archive records",
+                    count = recordsDeleted
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error deleting old archive records", 
+                    error = ex.Message 
+                });
+            }
         }
     }
 }

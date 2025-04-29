@@ -1,0 +1,260 @@
+@* /Views/Shared/_PayslipModal.cshtml *@
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Employee Payslip</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="payslip-table">
+                    <tr>
+                        <th colspan="7">THE BIG FIVE TRAINING AND ASSESSMENT CENTER</th>
+                        <th colspan="3">EMPLOYEE'S COPY</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3">PAYSLIP - SEMI MONTHLY PAYROLL</th>
+                        <td>PERIOD</td>
+                        <td colspan="3">1st CUT OFF (1st / 15th)</td>
+                        <td colspan="3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">&nbsp;</td>
+                        <td>DATE:</td>
+                        <td colspan="2" id="dateField">15-SEP-24</td>
+                        <td colspan="3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">EMPLOYEE:</td>
+                        <td colspan="2" id="employeeName"></td>
+                        <td>STATUS:</td>
+                        <td colspan="2">REGULAR</td>
+                        <td>HOURS WORKED <span id="hoursWorked"></span></td>
+                        <td colspan="2" id="hoursWorkedField" data-editable="true" data-field="hoursWorked">0.00</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">OVERTIME</td>
+                        <td rowspan="2">MIN</td>
+                        <td rowspan="2">PAY</td>
+                        <td rowspan="2">ADJUSTMENTS</td>
+                        <td rowspan="2">AMOUNT</td>
+                        <td rowspan="2">DEDUCTION</td>
+                        <td rowspan="2">AMOUNT</td>
+                        <td colspan="3" rowspan="2">&nbsp;</td>
+                    </tr>
+                    <tr></tr>
+                    <tr>
+                        <td colspan="7">&nbsp;</td>
+                        <td colspan="2">GROSS PAY</td>
+                        <td id="grossPay" data-field="grossPay">0.00</td>
+                    </tr>
+                    <tr>
+                        <td>REGULAR</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>INCENTIVE</td>
+                        <td>&nbsp;</td>
+                        <td>W/H TAX</td>
+                        <td id="taxField" data-editable="true" data-field="sss">0.00</td>
+                        <td colspan="2">DEDUCTION</td>
+                        <td id="totalDeductions" data-field="totalDeductions">0.00</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>PAID LEAVES</td>
+                        <td>&nbsp;</td>
+                        <td>SSS</td>
+                        <td id="sssField" data-editable="true" data-field="sss">0.00</td>
+                        <td colspan="3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>HOLIDAY PAY</td>
+                        <td id="holidayPay" data-editable="true" data-field="holiday">0.00</td>
+                        <td>PHILHEALTH</td>
+                        <td id="philhealthField" data-editable="true" data-field="philhealth">0.00</td>
+                        <th colspan="2">TOTAL</th>
+                        <td id="totalField" data-field=totalField>0.00</td>
+                    </tr>
+                    <tr>
+                        <td>OTHERS</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>TARDINESS</td>
+                        <td>&nbsp;</td>
+                        <td>PAG-IBIG</td>
+                        <td id="pagibigField" data-editable="true" data-field="pagibig">0.00</td>
+                        <td colspan="2">NET PAY</td>
+                        <td id="netPay" data-field="netPay">0.00</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>OT</td>
+                        <td>&nbsp;</td>
+                        <td>LOAN</td>
+                        <td id="loanField" data-editable="true" data-field="loan">0.00</td>
+                        <td colspan="2">RECEIVED BY:</td>
+                        <td id="receivedBy"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>OTHERS/C.A</td>
+                        <td id="othersField" data-editable="true" data-field="others">0.00</td>
+                        <td colspan="3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td colspan="2">APPROVED BY:</td>
+                        <td>DANVER S. REYES</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="printModalContent()">Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ensure this function is available globally
+    function printModalContent() {
+        console.log("Print button clicked");
+
+        // Clone the modal content
+        const modalContent = document.querySelector("#detailsModal .modal-content").cloneNode(true);
+
+        // Remove unnecessary buttons from the cloned content
+        const buttons = modalContent.querySelectorAll("button");
+        buttons.forEach(button => button.remove());
+
+        // Clone the table and add it below the original table
+        const originalTable = modalContent.querySelector("table");
+        if (originalTable) {
+            const clonedTable = originalTable.cloneNode(true); // Clone the table
+
+            // Update the second table's text to "TB5'S COPY"
+            const employeeCopyText = clonedTable.querySelector("th[colspan='3']");
+            if (employeeCopyText && employeeCopyText.innerText === "EMPLOYEE'S COPY") {
+                employeeCopyText.innerText = "TB5'S COPY";
+            }
+
+            // Add spacing between the tables
+            originalTable.style.marginBottom = "10px"; // Reduced spacing
+            modalContent.appendChild(clonedTable); // Add the cloned table below the original one
+        }
+
+        // Adjust font size for print
+        adjustFontSizeForPrint(modalContent);
+
+        // Open a new window and write the modal content to it
+        const printWindow = window.open("", "_blank");
+        printWindow.document.write(`
+            <html lang="en">
+                <head>
+                    <title>Employee Payslip</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            page-break-inside: auto;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        th, td {
+                            border: 1px solid black;
+                            padding: 4px !important;
+                            text-align: left;
+                            white-space: nowrap !important;
+                            overflow: hidden !important;
+                            text-overflow: ellipsis !important;
+                            font-size: 10px !important;
+                        }
+                        th {
+                            background-color: #f2f2f2 !important;
+                        }
+                        tr {
+                            page-break-inside: avoid !important;
+                            page-break-after: auto !important;
+                        }
+                        @@media print {
+                            body {
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                            table {
+                                width: 100% !important;
+                                font-size: 10px !important;
+                            }
+                            th, td {
+                                padding: 4px !important;
+                                border: 1px solid black !important;
+                            }
+                            th {
+                                background-color: #f2f2f2 !important;
+                            }
+                            /* Add spacing between tables */
+                            table:first-of-type {
+                                margin-bottom: 10px !important;
+                            }
+                            /* Hide unnecessary elements */
+                            .modal-header, .modal-footer, .btn-close {
+                                display: none !important;
+                            }
+                            /* Remove margins and padding from the print window */
+                            @@page {
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${modalContent.innerHTML}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+
+        // Trigger the browser's print dialog
+        printWindow.print();
+    }
+
+    function adjustFontSizeForPrint(table) {
+        const rows = table.querySelectorAll("tr");
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("th, td");
+            cells.forEach(cell => {
+                let fontSize = parseInt(window.getComputedStyle(cell).fontSize);
+
+                // Reduce font size until the text fits
+                while (cell.scrollWidth > cell.clientWidth && fontSize > 6) { // Minimum font size of 6px
+                    fontSize--;
+                    cell.style.fontSize = `${fontSize}px`;
+                }
+            });
+        });
+    }
+</script>
