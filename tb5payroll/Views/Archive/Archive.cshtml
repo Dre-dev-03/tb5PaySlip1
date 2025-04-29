@@ -297,7 +297,7 @@
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ archiveId: currentArchiveId })
+					body: JSON.stringify(currentArchiveId) // Send just the ID string directly
 				});
 
 				const result = await response.json();

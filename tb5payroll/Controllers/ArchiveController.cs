@@ -115,16 +115,21 @@ namespace tb5payroll.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteArchiveRecord(string archiveId)
+        public async Task<IActionResult> DeleteArchiveRecord([FromBody] string archiveId)
         {
             try
             {
+                if (string.IsNullOrEmpty(archiveId))
+                {
+                    return BadRequest(new { success = false, message = "Archive ID is required" });
+                }
+
                 var record = await _context.EmployeeArchive
                     .FirstOrDefaultAsync(e => e.ArchiveId == archiveId);
 
                 if (record == null)
                 {
-                    return NotFound("Archive record not found");
+                    return NotFound(new { success = false, message = "Archive record not found" });
                 }
 
                 _context.EmployeeArchive.Remove(record);

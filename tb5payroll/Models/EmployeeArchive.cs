@@ -8,7 +8,7 @@ public class EmployeeArchive
 
     [Key]
     [Column("archiveId")]
-    public string? ArchiveId { get; set; }
+    public string ArchiveId { get; set; }
     
     [ForeignKey(nameof(EmployeeData))]
     [Column("idEmployeeData")]
