@@ -144,17 +144,31 @@ namespace tb5payroll.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteOldRecords(DateTime cutoffDate)
+        public async Task<IActionResult> DeleteOldRecords([FromBody] DeleteOldRecordsRequest request)
         {
             try
             {
+                if (!DateTime.TryParse(request.CutoffDate, out DateTime cutoffDate))
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "Invalid cutoff date format" 
+                    });
+                }
+
+                // Include the entire cutoff day by setting time to end of day
+                cutoffDate = cutoffDate.Date.AddDays(1).AddTicks(-1);
+
                 var oldRecords = await _context.EmployeeArchive
                     .Where(e => e.EmployeeArchiveDate < cutoffDate)
                     .ToListAsync();
 
                 if (!oldRecords.Any())
                 {
-                    return Json(new { success = false, message = "No records found older than the specified date" });
+                    return Json(new { 
+                        success = false, 
+                        message = $"No records found older than {cutoffDate.ToShortDateString()}" 
+                    });
                 }
 
                 _context.EmployeeArchive.RemoveRange(oldRecords);
@@ -175,5 +189,10 @@ namespace tb5payroll.Controllers
                 });
             }
         }
+
+        public class DeleteOldRecordsRequest
+        {
+            public string CutoffDate { get; set; }
+        }  
     }
 }

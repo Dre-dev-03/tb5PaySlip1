@@ -7,14 +7,14 @@
 
 <div class="dashboard-controls mb-3">
 	<!-- Search Input -->
-	<input type="text" id="searchInput" class="form-control" placeholder="Search Archive..." onkeyup="searchArchive()">
+	<input type="text" id="searchInput" class="form-control" placeholder="Search Archive...">
 
 	<!-- Date Range Picker -->
 	<div class="input-group">
 		<input type="date" id="startDate" class="form-control" placeholder="Start Date">
 		<span class="input-group-text">to</span>
 		<input type="date" id="endDate" class="form-control" placeholder="End Date">
-		<button class="btn btn-primary" onclick="filterByDate()">Filter</button>
+		<button id="filterBtn" class="btn btn-primary">Filter</button>
 	</div>
 
 	<!-- Bulk Delete Button -->
@@ -94,14 +94,13 @@
 
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-		let currentPage = 0;
+		let currentPage = 1;
 		const rowsPerPage = 7;
 		const table = document.getElementById("archiveTable");
 		const tbody = table.querySelector("tbody");
-		let allRows = Array.from(tbody.rows);
-		let filteredRows = [...allRows];
+		let allRows = [];
+		let filteredRows = [];
 		let currentArchiveId = null;
-		let currentCutoffDate = null;
 
 		async function loadArchiveData() {
 			const tableContainer = document.querySelector('.table-responsive');
@@ -205,26 +204,53 @@
 		}
 
 		async function filterByDate() {
-			const startDate = document.getElementById("startDate").value;
-			const endDate = document.getElementById("endDate").value;
+			const startDateInput = document.getElementById("startDate").value;
+			const endDateInput = document.getElementById("endDate").value;
+
+			// Validate at least one date is provided
+			if (!startDateInput && !endDateInput) {
+				alert("Please enter at least one date (start or end)");
+				return;
+			}
+
+			// Show loading indicator
+			const tableContainer = document.querySelector('.table-responsive');
+			const overlay = document.createElement('div');
+			overlay.className = 'position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-light bg-opacity-75';
+			overlay.style.zIndex = '10';
+			overlay.innerHTML = '<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div>';
+			tableContainer.style.position = 'relative';
+			tableContainer.appendChild(overlay);
 
 			try {
-				const response = await fetch(`/Archive/GetArchiveData?startDate=${startDate}&endDate=${endDate}`);
+				// Build query parameters
+				const params = new URLSearchParams();
+				if (startDateInput) params.append('startDate', startDateInput);
+				if (endDateInput) params.append('endDate', endDateInput);
+
+				const response = await fetch(`/Archive/GetArchiveData?${params.toString()}`);
 				const result = await response.json();
 
 				if (!response.ok) {
 					throw new Error(result.message || 'Failed to filter archive data');
 				}
 
-				populateTable(result.data);
+				if (!result.data || result.data.length === 0) {
+					showEmptyState("No records found for the selected date range");
+				} else {
+					populateTable(result.data);
+				}
 			} catch (error) {
 				console.error("Error filtering archive data:", error);
-				alert('Error filtering archive data: ' + error.message);
+				showEmptyState("Error loading filtered data");
+			} finally {
+				overlay.remove();
 			}
 		}
 
 		// Event listeners
 		document.getElementById("searchInput").addEventListener("keyup", searchArchive);
+		document.getElementById("filterBtn").addEventListener("click", filterByDate);
 		document.getElementById("prevPage").addEventListener("click", () => currentPage > 1 && showPage(--currentPage));
 		document.getElementById("nextPage").addEventListener("click", () => currentPage < totalPages() && showPage(++currentPage));
 
@@ -241,7 +267,6 @@
 						return response.json();
 					})
 					.then(data => {
-						// Same modal population as before
 						const employeeName = data.nameEmployeeData || "Unknown Employee";
 						document.getElementById("employeeName").innerText = employeeName;
 						document.getElementById("receivedBy").innerText = employeeName;
@@ -297,7 +322,7 @@
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify(currentArchiveId) // Send just the ID string directly
+					body: JSON.stringify(currentArchiveId)
 				});
 
 				const result = await response.json();
@@ -307,11 +332,9 @@
 				}
 
 				if (result.success) {
-					// Close modal and refresh data
 					bootstrap.Modal.getInstance(document.getElementById("confirmDeleteModal")).hide();
 					loadArchiveData();
 
-					// Show success message
 					if (typeof Swal !== 'undefined') {
 						Swal.fire('Success!', 'Archive record deleted successfully', 'success');
 					} else {
@@ -324,35 +347,49 @@
 			}
 		});
 
-		// Delete old records handler
-		document.getElementById("deleteOldBtn").addEventListener("click", function() {
-			const cutoffDate = prompt("Enter cutoff date (YYYY-MM-DD). All records before this date will be deleted:");
+		document.getElementById("deleteOldBtn").addEventListener("click", async function() {
+			const cutoffDateInput = prompt("Enter cutoff date (YYYY-MM-DD). All records before this date will be deleted:");
 
-			if (cutoffDate && confirm(`Are you sure you want to delete ALL records before ${cutoffDate}? This cannot be undone.`)) {
-				fetch('/Archive/DeleteOldRecords', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({ cutoffDate: cutoffDate })
-				})
-					.then(response => response.json())
-					.then(result => {
-						if (result.success) {
-							loadArchiveData();
-							if (typeof Swal !== 'undefined') {
-								Swal.fire('Success!', result.message, 'success');
-							} else {
-								alert(result.message);
-							}
-						} else {
-							throw new Error(result.message);
-						}
-					})
-					.catch(error => {
-						console.error("Error deleting old records:", error);
-						alert('Error deleting old records: ' + error.message);
+			if (!cutoffDateInput) return;
+
+			if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoffDateInput)) {
+				alert("Invalid date format. Please use YYYY-MM-DD");
+				return;
+			}
+
+			const cutoffDate = new Date(cutoffDateInput);
+			cutoffDate.setHours(23, 59, 59, 999);
+
+			if (confirm(`Are you sure you want to delete ALL records before ${cutoffDate.toLocaleDateString()}? This cannot be undone.`)) {
+				try {
+					const response = await fetch('/Archive/DeleteOldRecords', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							cutoffDate: cutoffDate.toISOString()
+						})
 					});
+
+					const result = await response.json();
+
+					if (!response.ok) {
+						throw new Error(result.message || 'Failed to delete old records');
+					}
+
+					if (result.success) {
+						loadArchiveData();
+						if (typeof Swal !== 'undefined') {
+							Swal.fire('Success!', result.message, 'success');
+						} else {
+							alert(result.message);
+						}
+					}
+				} catch (error) {
+					console.error("Error deleting old records:", error);
+					alert('Error deleting old records: ' + error.message);
+				}
 			}
 		});
 
@@ -360,8 +397,7 @@
 		loadArchiveData();
 	});
 
-	// Reuse the print function from Dashboard
 	function printModalContent() {
-		// Same implementation as in Dashboard.cshtml
+		// Print function implementation
 	}
 </script>
