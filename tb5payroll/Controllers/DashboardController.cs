@@ -331,7 +331,79 @@ public async Task<IActionResult> ArchiveCurrentData()
             errorDetails = ex.ToString()
         });
     }
+}   
+
+[HttpGet]
+public async Task<IActionResult> GetManualData()
+{
+    try
+    {
+        // This will be your manual mode implementation
+        // For now, just returning sample structure
+        return Json(new { 
+            success = true, 
+            message = "Manual mode data loaded",
+            data = new List<object>() // Your manual data will go here
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { 
+            success = false, 
+            message = "Error loading manual data",
+            error = ex.Message 
+        });
+    }
 }
+
+[HttpPost]
+public async Task<IActionResult> SaveManualData([FromBody] ManualEmployeeData data)
+{
+    try
+    {
+        if (int.TryParse(data.Id, out int birthdayId))
+        {
+            var employee = await _context.EmployeeData
+                .FirstOrDefaultAsync(e => e.BirthdayEmployeeData == birthdayId);
+
+            if (employee == null)
+            {
+                return Json(new { success = false, message = "Employee not found" });
+            }
+
+            // Update fields from manual input
+            if (decimal.TryParse(data.HoursWorked, out decimal hours))
+            {
+                employee.HoursWorkedEmployeeData = hours;
+            }
+            
+            // Add similar updates for other fields (overtime, holiday, etc.)
+            
+            await _context.SaveChangesAsync();
+            
+            return Json(new { success = true });
+        }
+        return Json(new { success = false, message = "Invalid employee ID" });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { 
+            success = false, 
+            message = "Error saving manual data",
+            error = ex.Message 
+        });
+    }
+}
+
+public class ManualEmployeeData
+{
+    public string Id { get; set; }
+    public string Workday { get; set; }
+    public string Holiday { get; set; }
+    public string Overtime { get; set; }
+    public string HoursWorked { get; set; }
+}
+
         public class Employee
         {
             public string Id { get; set; }

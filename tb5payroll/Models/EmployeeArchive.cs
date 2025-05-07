@@ -24,7 +24,7 @@ public class EmployeeArchive
     public string? NameEmployeeData { get; set; }
     
     [Column("basePayEmployeeData")]
-    public decimal? BasePayEmployeeData { get; set; }
+    public decimal BasePayEmployeeData { get; set; }
 
     [Column("hoursWorkedEmployeeData")]
     public decimal? HoursWorkedEmployeeData { get; set; }

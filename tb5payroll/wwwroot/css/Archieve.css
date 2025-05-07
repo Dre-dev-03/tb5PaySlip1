@@ -148,3 +148,11 @@
     margin-top: auto;
     padding-bottom: 20px;
 }
+/* Add this to your existing style section */
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+}

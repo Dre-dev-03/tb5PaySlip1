@@ -5,7 +5,12 @@
 
 <h2 class="text-left mb-4">Employee Dashboard</h2>
 
-<!-- Replace the controls section with this -->
+<!-- Toggle Switch for Auto/Manual Mode -->
+<div class="form-check form-switch mb-3">
+	<input class="form-check-input" type="checkbox" id="modeToggle" checked>
+	<label class="form-check-label" for="modeToggle">Automatic Mode</label>
+</div>
+
 <div class="dashboard-controls mb-3">
 	<!-- Search Input -->
 	<input type="text" id="searchInput" class="form-control" placeholder="Search Employee..." onkeyup="searchEmployee()">
@@ -14,7 +19,7 @@
 	<button id="archiveBtn" class="btn btn-warning">
 		<i class="fas fa-archive"></i> Archive Current Data
 	</button>
-
+	
 	<!-- File Input with custom styling -->
 	<div class="file-input-container">
 		<div class="custom-file-input">
@@ -52,142 +57,7 @@
 	</table>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-xl">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="detailsModalLabel">Employee Payslip</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				<table class="payslip-table">
-					<tr>
-						<th colspan="7">THE BIG FIVE TRAINING AND ASSESSMENT CENTER</th>
-						<th colspan="3">EMPLOYEE'S COPY</th>
-					</tr>
-					<tr>
-						<th colspan="3">PAYSLIP - SEMI MONTHLY PAYROLL</th>
-						<td>PERIOD</td>
-						<td colspan="3">1st CUT OFF (1st / 15th)</td>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td colspan="4">&nbsp;</td>
-						<td>DATE:</td>
-						<td colspan="2" id="dateField">15-SEP-24</td>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td colspan="2">EMPLOYEE:</td>
-						<td colspan="2" id="employeeName"></td>
-						<td>STATUS:</td>
-						<td colspan="2">REGULAR</td>
-						<td>HOURS WORKED <span id="hoursWorked"></span></td>
-						<td colspan="2" id="hoursWorkedField" data-editable="true" data-field="hoursWorked">0.00</td>
-					</tr>
-					<tr>
-						<td rowspan="2">OVERTIME</td>
-						<td rowspan="2">MIN</td>
-						<td rowspan="2">PAY</td>
-						<td rowspan="2">ADJUSTMENTS</td>
-						<td rowspan="2">AMOUNT</td>
-						<td rowspan="2">DEDUCTION</td>
-						<td rowspan="2">AMOUNT</td>
-						<td colspan="3" rowspan="2">&nbsp;</td>
-					</tr>
-					<tr></tr>
-					<tr>
-						<td colspan="7">&nbsp;</td>
-						<td colspan="2">GROSS PAY</td>
-						<td id="grossPay" data-field="grossPay">0.00</td>
-					</tr>
-					<tr>
-						<td>REGULAR</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>INCENTIVE</td>
-						<td>&nbsp;</td>
-						<td>W/H TAX</td>
-						<td id="taxField" data-editable="true" data-field="sss">0.00</td>
-						<td colspan="2">DEDUCTION</td>
-						<td id="totalDeductions" data-field="totalDeductions">0.00</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>PAID LEAVES</td>
-						<td>&nbsp;</td>
-						<td>SSS</td>
-						<td id="sssField" data-editable="true" data-field="sss">0.00</td>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>HOLIDAY PAY</td>
-						<td id="holidayPay" data-editable="true" data-field="holiday">0.00</td>
-						<td>PHILHEALTH</td>
-						<td id="philhealthField" data-editable="true" data-field="philhealth">0.00</td>
-						<th colspan="2">TOTAL</th>
-						<td id="totalField" data-field=totalField>0.00</td>
-					</tr>
-					<tr>
-						<td>OTHERS</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>TARDINESS</td>
-						<td>&nbsp;</td>
-						<td>PAG-IBIG</td>
-						<td id="pagibigField" data-editable="true" data-field="pagibig">0.00</td>
-						<td colspan="2">NET PAY</td>
-						<td id="netPay" data-field="netPay">0.00</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>OT</td>
-						<td>&nbsp;</td>
-						<td>LOAN</td>
-						<td id="loanField" data-editable="true" data-field="loan">0.00</td>
-						<td colspan="2">RECEIVED BY:</td>
-						<td id="receivedBy"></td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>OTHERS/C.A</td>
-						<td id="othersField" data-editable="true" data-field="others">0.00</td>
-						<td colspan="3">&nbsp;</td>
-
-
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td colspan="2">APPROVED BY:</td>
-						<td>DANVER S. REYES</td>
-					</tr>
-				</table>
-				
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-primary" onclick="printModalContent()">Print</button>			</div>
-		</div>
-	</div>
-</div>
+@await Html.PartialAsync("_PayslipModal")
 
 <!-- Pagination Controls -->
 <div class="d-flex justify-content-between mt-3">
@@ -562,6 +432,132 @@
 					});
 			}
 		});
+
+		// Track current mode (true = automatic, false = manual)
+		let isAutomaticMode = true;
+
+		document.getElementById('modeToggle').addEventListener('change', function() {
+			isAutomaticMode = this.checked;
+			document.querySelector('.form-check-label').textContent =
+				isAutomaticMode ? 'Automatic Mode' : 'Manual Mode';
+
+			// Reset or reload data based on mode
+			if (isAutomaticMode) {
+				loadInitialData(); // Reload automatic mode data
+			} else {
+				loadManualModeData(); // We'll implement this later
+			}
+		});
+
+		async function loadManualModeData() {
+			const tableContainer = document.querySelector('.table-responsive');
+			const overlay = createLoadingOverlay();
+			tableContainer.appendChild(overlay);
+
+			try {
+				const response = await fetch('/Dashboard/GetManualData');
+				const result = await response.json();
+
+				if (!response.ok) {
+					throw new Error(result.message || 'Failed to load manual data');
+				}
+
+				// Clear and rebuild table for manual mode
+				const tbody = document.querySelector("#employeeTable tbody");
+				tbody.innerHTML = "";
+
+				// This will be populated with your manual mode data structure
+				result.data.forEach(employee => {
+					const row = document.createElement("tr");
+					row.innerHTML = `
+                <td>${employee.id}</td>
+                <td>${employee.name}</td>
+                <td><input type="number" class="form-control workday-input" value="${employee.workday}"></td>
+                <td><input type="number" class="form-control holiday-input" value="${employee.holiday}"></td>
+                <td><input type="number" class="form-control overtime-input" value="${employee.overtime}"></td>
+                <td><input type="number" class="form-control hours-input" value="${employee.hoursWorked}"></td>
+                <td>
+                    <button class="btn btn-primary btn-save">Save</button>
+                </td>
+            `;
+					tbody.appendChild(row);
+				});
+
+				// Add event listeners for manual editing
+				document.querySelectorAll('.btn-save').forEach(btn => {
+					btn.addEventListener('click', saveManualChanges);
+				});
+
+			} catch (error) {
+				showEmptyState(error.message || 'Failed to load manual data');
+			} finally {
+				overlay.remove();
+			}
+		}
+
+		function saveManualChanges(event) {
+			const row = event.target.closest("tr");
+			const employeeId = row.cells[0].textContent;
+
+			const data = {
+				id: employeeId,
+				workday: row.querySelector('.workday-input').value,
+				holiday: row.querySelector('.holiday-input').value,
+				overtime: row.querySelector('.overtime-input').value,
+				hoursWorked: row.querySelector('.hours-input').value
+			};
+
+			// You'll need to implement this endpoint
+			fetch('/Dashboard/SaveManualData', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(result => {
+					if (result.success) {
+						showToast('Changes saved successfully!');
+					} else {
+						showToast('Error saving changes: ' + result.message, 'error');
+					}
+				});
+		}
+
+		function showToast(message, type = 'success') {
+			const toast = document.createElement('div');
+			toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+			toast.setAttribute('role', 'alert');
+			toast.setAttribute('aria-live', 'assertive');
+			toast.setAttribute('aria-atomic', 'true');
+
+			toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+
+			const container = document.querySelector('.toast-container') || createToastContainer();
+			container.appendChild(toast);
+
+			const bsToast = new bootstrap.Toast(toast);
+			bsToast.show();
+
+			setTimeout(() => {
+				toast.remove();
+			}, 5000);
+		}
+
+		function createToastContainer() {
+			const container = document.createElement('div');
+			container.className = 'toast-container';
+			document.body.appendChild(container);
+			return container;
+		}
 
         document.getElementById('archiveBtn').addEventListener('click', async function() {
             const btn = this;
