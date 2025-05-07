@@ -139,34 +139,167 @@
 			tbody.innerHTML = "";
 			data.forEach(record => {
 				const row = document.createElement("tr");
+				// Calculate values dynamically (matches Dashboard logic)
+				const basePay = record.basePayEmployeeData || 0;
+				const hoursWorked = record.hoursWorkedEmployeeData || 0;
+				const overtime = record.overtimeHoursEmployeeData || 0;
+				const holiday = record.holidayHoursEmployeeData || 0;
+
+				// Gross pay calculation (same as Dashboard)
+				const grossPay = (basePay * hoursWorked) +
+					(record.trainingEmployeeData || 0) +
+					(overtime * basePay) +
+					(holiday * basePay);
+
+				// Deductions (same as Dashboard)
+				const totalDeductions =
+					(record.sssEmployeeData || 0) +
+					(record.philHealthEmployeeData || 0) +
+					(record.pagIbigEmployeeData || 0) +
+					(record.loanEmployeeData || 0) +
+					(record.taxEmployeeData || 0) +
+					(record.cashAdvEmployeeData || 0) +
+					(record.lateDeductionEmployeeData || 0) +
+					(record.underTimeEmployeeData || 0);
+
+				// Net pay calculation
+				const netPay = grossPay - totalDeductions;
+
 				row.innerHTML = `
-                    <td>${record.birthdayEmployeeData}</td>
-                    <td><a href="#">${record.nameEmployeeData}</a></td>
-                    <td>${new Date(record.employeeArchiveDate).toLocaleDateString()}</td>
-                    <td>${record.hoursWorkedEmployeeData?.toFixed(1) || '0.0'}</td>
-                    <td>${record.overtimeHoursEmployeeData?.toFixed(1) || '0.0'}</td>
-                    <td>${record.holidayHoursEmployeeData?.toFixed(1) || '0.0'}</td>
-                    <td>${calculateGrossPay(record).toFixed(2)}</td>
-                    <td>${record.calculatedPayEmployeeData?.toFixed(2) || '0.00'}</td>
-                    <td>
-                        <button class="btn btn-primary btn-view">View</button>
-                        <button class="btn btn-danger btn-delete" data-archiveid="${record.archiveId}">Delete</button>
-                    </td>
-                `;
+            <td>${record.birthdayEmployeeData}</td>
+            <td><a href="#">${record.nameEmployeeData}</a></td>
+            <td>${new Date(record.employeeArchiveDate).toLocaleDateString()}</td>
+            <td>${hoursWorked.toFixed(1)}</td>
+            <td>${overtime.toFixed(1)}</td>
+            <td>${holiday.toFixed(1)}</td>
+            <td>${grossPay.toFixed(2)}</td>
+            <td>${netPay.toFixed(2)}</td> <!-- Dynamically calculated net pay -->
+            <td>
+                <button class="btn btn-primary btn-view">View</button>
+                <button class="btn btn-danger btn-delete" data-archiveid="${record.archiveId}">Delete</button>
+            </td>
+        `;
 				tbody.appendChild(row);
 			});
-
-			allRows = Array.from(tbody.rows);
-			filteredRows = [...allRows];
-			showPage(1);
 		}
 
-		function calculateGrossPay(record) {
-			return (record.basePayEmployeeData * record.hoursWorkedEmployeeData) +
-				(record.overtimeHoursEmployeeData * record.basePayEmployeeData * 1.25) +
-				(record.holidayHoursEmployeeData * record.basePayEmployeeData * 2);
-		}
+		document.getElementById("archiveTable").addEventListener("click", function (event) {
+			if (event.target.classList.contains("btn-view")) {
+				const row = event.target.closest("tr");
+				const employeeId = row.cells[0].innerText;
+				const archiveDate = row.cells[2].innerText;
 
+				fetch(`/Archive/GetArchiveDetails?id=${employeeId}&date=${archiveDate}`)
+					.then(response => {
+						if (!response.ok) throw new Error('Network response was not ok');
+						return response.json();
+					})
+					.then(data => {
+						const employeeName = data.nameEmployeeData || "Unknown Employee";
+
+						// Calculate all components (matches Dashboard logic)
+						const basePay = data.basePayEmployeeData || 0;
+						const hoursWorked = data.hoursWorkedEmployeeData || 0;
+						const trainingPay = data.trainingEmployeeData || 0;
+						const overtimePay = (data.overtimeHoursEmployeeData || 0) * basePay;
+						const holidayPay = (data.holidayHoursEmployeeData || 0) * basePay;
+
+						// Gross pay calculation
+						const grossPay = (basePay * hoursWorked) + trainingPay + overtimePay + holidayPay;
+
+						// Total deductions (all possible deductions)
+						const totalDeductions =
+							(data.sssEmployeeData || 0) +
+							(data.philHealthEmployeeData || 0) +
+							(data.pagIbigEmployeeData || 0) +
+							(data.loanEmployeeData || 0) +
+							(data.taxEmployeeData || 0) +
+							(data.cashAdvEmployeeData || 0) +
+							(data.lateDeductionEmployeeData || 0) +
+							(data.underTimeEmployeeData || 0);
+
+						// Net pay calculation
+						const netPay = grossPay - totalDeductions;
+
+						// Update all fields in the modal
+						document.getElementById("employeeName").innerText = employeeName;
+						document.getElementById("receivedBy").innerText = employeeName;
+						document.getElementById("grossPay").innerText = grossPay.toFixed(2);
+						document.getElementById("totalDeductions").innerText = totalDeductions.toFixed(2);
+						document.getElementById("netPay").innerText = netPay.toFixed(2);
+						document.getElementById("holidayPay").innerText = holidayPay.toFixed(2);
+						document.getElementById("taxField").innerText = (data.taxEmployeeData || 0).toFixed(2);
+						document.getElementById("sssField").innerText = (data.sssEmployeeData || 0).toFixed(2);
+						document.getElementById("philhealthField").innerText = (data.philHealthEmployeeData || 0).toFixed(2);
+						document.getElementById("pagibigField").innerText = (data.pagIbigEmployeeData || 0).toFixed(2);
+						document.getElementById("loanField").innerText = (data.loanEmployeeData || 0).toFixed(2);
+						document.getElementById("hoursWorkedField").innerText = hoursWorked.toFixed(2);
+						document.getElementById("dateField").innerText = new Date(data.employeeArchiveDate).toLocaleDateString();
+
+						// Show the modal
+						new bootstrap.Modal(document.getElementById("detailsModal")).show();
+					})
+					.catch(error => {
+						console.error("Error loading archive details:", error);
+
+						// Fallback display if calculations fail
+						const employeeName = row.cells[1].innerText || "Unknown Employee";
+						document.getElementById("employeeName").innerText = employeeName;
+						document.getElementById("receivedBy").innerText = employeeName;
+
+						// Set all amounts to 0.00 in case of error
+						document.getElementById("grossPay").innerText = "0.00";
+						document.getElementById("totalDeductions").innerText = "0.00";
+						document.getElementById("netPay").innerText = "0.00";
+
+						new bootstrap.Modal(document.getElementById("detailsModal")).show();
+					});
+			}
+			else if (event.target.classList.contains("btn-delete")) {
+				currentArchiveId = event.target.dataset.archiveid;
+				const employeeName = event.target.closest("tr").cells[1].innerText;
+
+				document.getElementById("deleteModalMessage").innerText =
+					`Are you sure you want to delete the archive record for ${employeeName}?`;
+
+				const deleteModal = new bootstrap.Modal(document.getElementById("confirmDeleteModal"));
+				deleteModal.show();
+			}
+		});
+
+// Delete confirmation handler remains unchanged
+		document.getElementById("confirmDeleteBtn").addEventListener("click", async function() {
+			try {
+				const response = await fetch('/Archive/DeleteArchiveRecord', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(currentArchiveId)
+				});
+
+				const result = await response.json();
+
+				if (!response.ok) {
+					throw new Error(result.message || 'Failed to delete record');
+				}
+
+				if (result.success) {
+					bootstrap.Modal.getInstance(document.getElementById("confirmDeleteModal")).hide();
+					loadArchiveData();
+
+					if (typeof Swal !== 'undefined') {
+						Swal.fire('Success!', 'Archive record deleted successfully', 'success');
+					} else {
+						alert('Archive record deleted successfully');
+					}
+				}
+			} catch (error) {
+				console.error("Error deleting archive record:", error);
+				alert('Error deleting archive record: ' + error.message);
+			}
+		});
+		
 		function showEmptyState(message) {
 			tbody.innerHTML = `
                 <tr>
@@ -268,37 +401,54 @@
 					})
 					.then(data => {
 						const employeeName = data.nameEmployeeData || "Unknown Employee";
+
+						// Update employee info
 						document.getElementById("employeeName").innerText = employeeName;
 						document.getElementById("receivedBy").innerText = employeeName;
-						document.getElementById("holidayPay").innerText = (data.holidayHoursEmployeeData || 0).toFixed(2);
 
-						const grossPay = calculateGrossPay(data);
+						// Calculate gross pay (matches Dashboard)
+						const basePay = data.basePayEmployeeData || 0;
+						const hoursWorked = data.hoursWorkedEmployeeData || 0;
+						const trainingPay = data.trainingEmployeeData || 0;
+						const overtimePay = (data.overtimeHoursEmployeeData || 0) * basePay; // 1x rate (no 1.25x)
+						const holidayPay = (data.holidayHoursEmployeeData || 0) * basePay;   // 1x rate (no 2x)
+						const grossPay = (basePay * hoursWorked) + trainingPay + overtimePay + holidayPay;
+
+						// Calculate total deductions (includes all Dashboard fields)
+						const totalDeductions =
+							(data.sssEmployeeData || 0) +
+							(data.philHealthEmployeeData || 0) +
+							(data.pagIbigEmployeeData || 0) +
+							(data.loanEmployeeData || 0) +
+							(data.taxEmployeeData || 0) +
+							(data.cashAdvEmployeeData || 0) +
+							(data.lateDeductionEmployeeData || 0) +
+							(data.underTimeEmployeeData || 0);
+
+						// Update payslip fields
 						document.getElementById("grossPay").innerText = grossPay.toFixed(2);
-						document.getElementById("netPay").innerText = (data.calculatedPayEmployeeData || 0).toFixed(2);
-						document.getElementById("totalField").innerText = grossPay.toFixed(2);
+						document.getElementById("totalDeductions").innerText = totalDeductions.toFixed(2);
+						document.getElementById("netPay").innerText = (grossPay - totalDeductions).toFixed(2);
+						document.getElementById("holidayPay").innerText = holidayPay.toFixed(2);
 						document.getElementById("taxField").innerText = (data.taxEmployeeData || 0).toFixed(2);
 						document.getElementById("sssField").innerText = (data.sssEmployeeData || 0).toFixed(2);
 						document.getElementById("philhealthField").innerText = (data.philHealthEmployeeData || 0).toFixed(2);
 						document.getElementById("pagibigField").innerText = (data.pagIbigEmployeeData || 0).toFixed(2);
 						document.getElementById("loanField").innerText = (data.loanEmployeeData || 0).toFixed(2);
-						document.getElementById("hoursWorkedField").innerText = (data.hoursWorkedEmployeeData || 0).toFixed(2);
-
-						// Calculate total deductions
-						const totalDeductions = (data.sssEmployeeData || 0) + (data.philHealthEmployeeData || 0) +
-							(data.pagIbigEmployeeData || 0) + (data.loanEmployeeData || 0) +
-							(data.taxEmployeeData || 0);
-						document.getElementById("totalDeductions").innerText = totalDeductions.toFixed(2);
-
-						// Update date field to show archive date
+						document.getElementById("hoursWorkedField").innerText = hoursWorked.toFixed(2);
 						document.getElementById("dateField").innerText = new Date(data.employeeArchiveDate).toLocaleDateString();
 
+						// Show the modal
 						new bootstrap.Modal(document.getElementById("detailsModal")).show();
 					})
 					.catch(error => {
-						console.error("Error:", error);
+						console.error("Error loading archive details:", error);
+
+						// Fallback: Show basic info even if calculations fail
 						const employeeName = row.cells[1].innerText || "Unknown Employee";
 						document.getElementById("employeeName").innerText = employeeName;
 						document.getElementById("receivedBy").innerText = employeeName;
+
 						new bootstrap.Modal(document.getElementById("detailsModal")).show();
 					});
 			}

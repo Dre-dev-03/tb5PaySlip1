@@ -33,7 +33,7 @@ namespace tb5payroll.Controllers
             return Json(employees);
         }
         
-              [HttpPost]
+        [HttpPost]
 public async Task<IActionResult> ApplyContributions([FromBody] ContributionModel model)
 {
     try
@@ -43,27 +43,46 @@ public async Task<IActionResult> ApplyContributions([FromBody] ContributionModel
             return BadRequest("Invalid contribution data");
         }
 
+        // Validate base pay if provided
+        if (model.BasePay.HasValue && model.BasePay.Value < 0)
+        {
+            return BadRequest("Base pay cannot be negative");
+        }
+
         var employee = await _context.EmployeeData.FindAsync(model.EmployeeId);
         if (employee == null)
         {
             return NotFound("Employee not found");
         }
 
-        // Update employee contributions
+        // Update employee contributions with null checks
         if (model.WHTax.HasValue) employee.TaxEmployeeData = model.WHTax.Value;
         if (model.PagIbig.HasValue) employee.PagIbigEmployeeData = model.PagIbig.Value;
         if (model.SSS.HasValue) employee.SssEmployeeData = model.SSS.Value;
-        if (model.PhilHealth.HasValue) employee.PhilHealthEmployeeData = model.PhilHealth.Value; // Add this line
+        if (model.PhilHealth.HasValue) employee.PhilHealthEmployeeData = model.PhilHealth.Value;
         if (model.Tardiness.HasValue) employee.CashAdvEmployeeData = model.Tardiness.Value;
         if (model.Loan.HasValue) employee.LoanEmployeeData = model.Loan.Value;
         if (model.Others.HasValue) employee.TrainingEmployeeData = model.Others.Value;
+        if (model.BasePay.HasValue) employee.BasePayEmployeeData = model.BasePay.Value;
 
         await _context.SaveChangesAsync();
-        return Ok();
+        
+        // Return the updated employee data
+        return Ok(new 
+        {
+            message = "Contributions updated successfully",
+            employeeId = employee.IdEmployeeData,
+            basePay = employee.BasePayEmployeeData
+        });
     }
     catch (Exception ex)
     {
-        return StatusCode(500, $"Internal server error: {ex.Message}");
+        return StatusCode(500, new 
+        {
+            error = "Internal server error",
+            details = ex.Message,
+            stackTrace = ex.StackTrace
+        });
     }
 }
 
@@ -77,50 +96,71 @@ public async Task<IActionResult> ApplyToAll([FromBody] ContributionModel model)
             return BadRequest("Invalid contribution data");
         }
 
+        // Validate base pay if provided
+        if (model.BasePay.HasValue && model.BasePay.Value < 0)
+        {
+            return BadRequest("Base pay cannot be negative");
+        }
+
         var allEmployees = await _context.EmployeeData.ToListAsync();
+        int updatedCount = 0;
         
         foreach (var employee in allEmployees)
         {
+            // Only update fields that have values
             if (model.WHTax.HasValue) employee.TaxEmployeeData = model.WHTax.Value;
             if (model.PagIbig.HasValue) employee.PagIbigEmployeeData = model.PagIbig.Value;
             if (model.SSS.HasValue) employee.SssEmployeeData = model.SSS.Value;
-            if (model.PhilHealth.HasValue) employee.PhilHealthEmployeeData = model.PhilHealth.Value; // Add this line
+            if (model.PhilHealth.HasValue) employee.PhilHealthEmployeeData = model.PhilHealth.Value;
             if (model.Tardiness.HasValue) employee.CashAdvEmployeeData = model.Tardiness.Value;
             if (model.Loan.HasValue) employee.LoanEmployeeData = model.Loan.Value;
             if (model.Others.HasValue) employee.TrainingEmployeeData = model.Others.Value;
+            if (model.BasePay.HasValue) employee.BasePayEmployeeData = model.BasePay.Value;
+            
+            updatedCount++;
         }
 
         await _context.SaveChangesAsync();
-        return Ok();
+        
+        return Ok(new 
+        {
+            message = $"Contributions updated for {updatedCount} employees",
+            updatedCount,
+            includedBasePay = model.BasePay.HasValue
+        });
     }
     catch (Exception ex)
     {
-        return StatusCode(500, $"Internal server error: {ex.Message}");
+        return StatusCode(500, new 
+        {
+            error = "Failed to update all employees",
+            details = ex.Message,
+            stackTrace = ex.StackTrace
+        });
     }
 }
+        
+[HttpPost]
+public async Task<IActionResult> SearchEmployees(string searchTerm)
+{
+    if (string.IsNullOrWhiteSpace(searchTerm))
+    {
+        return BadRequest("Search term cannot be empty");
+    }
 
- 
-
-        [HttpPost]
-        public async Task<IActionResult> SearchEmployees(string searchTerm)
+    var employees = await _context.EmployeeData
+        .Where(e => e.NameEmployeeData.Contains(searchTerm) || 
+                    e.BirthdayEmployeeData.ToString().Contains(searchTerm))
+        .Select(e => new 
         {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-            {
-                return BadRequest("Search term cannot be empty");
-            }
+            id = e.IdEmployeeData,
+            name = e.NameEmployeeData,
+            birthday = e.BirthdayEmployeeData
+        })
+        .ToListAsync();
 
-            var employees = await _context.EmployeeData
-                .Where(e => e.NameEmployeeData.Contains(searchTerm))
-                .Select(e => new 
-                {
-                    id = e.IdEmployeeData,
-                    name = e.NameEmployeeData,
-                    birthday = e.BirthdayEmployeeData
-                })
-                .ToListAsync();
-
-            return Json(employees);
-        }
+    return Json(employees);
+}
 
         
         [HttpGet]
@@ -142,7 +182,8 @@ public async Task<IActionResult> ApplyToAll([FromBody] ContributionModel model)
                 cashAdvEmployeeData = employee.CashAdvEmployeeData,
                 loanEmployeeData = employee.LoanEmployeeData,
                 trainingEmployeeData = employee.TrainingEmployeeData,
-                taxEmployeeData = employee.TaxEmployeeData
+                taxEmployeeData = employee.TaxEmployeeData,
+                basePayEmployeeData = employee.BasePayEmployeeData
             });
         }
         public class ContributionModel
@@ -155,6 +196,9 @@ public async Task<IActionResult> ApplyToAll([FromBody] ContributionModel model)
             public decimal? Tardiness { get; set; }
             public decimal? Loan { get; set; }
             public decimal? Others { get; set; }
+            
+            public decimal? BasePay { get; set; } 
+
             
 
         }

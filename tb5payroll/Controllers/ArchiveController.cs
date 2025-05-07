@@ -2,9 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using tb5payroll.Data;
 using tb5payroll.Models;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace tb5payroll.Controllers
 {

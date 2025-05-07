@@ -16,12 +16,13 @@
 				<div class="card-body p-0 d-flex flex-column"> <!-- Removed padding and added p-0 -->
 					<!-- Search Bar at Top -->
 					<div class="p-3 border-bottom"> <!-- Added padding and border -->
+						<!--
 						<div class="input-group">
-							<input type="text" id="searchInput" class="form-control" placeholder="Search employees..." onkeyup="searchEmployee()">
-							<button class="btn btn-outline-secondary" type="button" onclick="searchEmployee()">
+							<input type="text" id="searchInput" class="form-control" placeholder="Search employees..." oninput="debounceSearch()">							<button class="btn btn-outline-secondary" type="button" onclick="searchEmployee()">
 								<i class="fas fa-search"></i>
 							</button>
 						</div>
+						-->
 					</div>
 
 					<!-- Compact Employee Table -->
@@ -62,7 +63,11 @@
 							<label class="form-label">Selected Employee:</label>
 							<span id="selectedEmployeeName" class="form-control-plaintext fw-bold">None selected</span>
 						</div>
-
+						<div class="input-group mb-3">
+							<label class="input-group-text" for="base-pay">BASE PAY:</label>
+							<input type="number" step="0.01" class="form-control" id="base-pay" placeholder="Amount">
+							<span class="input-group-text current-value" id="current-base-pay">-</span>
+						</div>
 						<div class="input-group mb-3">
 							<label class="input-group-text" for="wh-tax">W/H TAX:</label>
 							<input type="number" step="0.01" class="form-control" id="wh-tax" placeholder="Amount">
@@ -115,39 +120,52 @@
 </div>
 
 <script>
-		// Load all employees when page loads
-		document.addEventListener('DOMContentLoaded', function() {
-			loadAllEmployees();
-		});
 
-		// Load all employees from server
-		function loadAllEmployees() {
-			fetch('/Contribution/GetAllEmployees', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			})
-				.then(response => response.json())
-				.then(data => populateEmployeeTable(data))
-				.catch(error => console.error('Error loading employees:', error));
-		}
+	let searchTimeout;
+	function debounceSearch() {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(searchEmployee, 300);
+	}
+
+	// Load all employees when page loads
+	document.addEventListener('DOMContentLoaded', function() {
+		loadAllEmployees();
+	});
+
+	// Load all employees from server
+	function loadAllEmployees() {
+		fetch('/Contribution/GetAllEmployees', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' }
+		})
+			.then(response => response.json())
+			.then(data => populateEmployeeTable(data))
+			.catch(error => console.error('Error loading employees:', error));
+	}
 
 		// Populate employee table
-		function populateEmployeeTable(employees) {
-			const tableBody = document.getElementById('employeeTableBody');
-			tableBody.innerHTML = '';
+	function populateEmployeeTable(employees) {
+		const tableBody = document.getElementById('employeeTableBody');
 
-			employees.forEach(employee => {
-				const row = document.createElement('tr');
-				row.innerHTML = `
+		if (!employees || employees.length === 0) {
+			showNoResultsMessage();
+			return;
+		}
+
+		tableBody.innerHTML = '';
+		employees.forEach(employee => {
+			const row = document.createElement('tr');
+			row.innerHTML = `
             <td>${employee.birthday}</td>
             <td>${employee.name}</td>
             <td><button class="btn btn-sm btn-primary" onclick="selectEmployee('${employee.id}')">Select</button></td>
         `;
-				tableBody.appendChild(row);
-			});
-		}
+			tableBody.appendChild(row);
+		});
+	}
 
-		// Select an employee and load their current values
+
+	// Select an employee and load their current values
 		async function selectEmployee(employeeId) {
 			try {
 				const response = await fetch(`/Contribution/GetEmployeeContributions?id=${employeeId}`);
@@ -165,6 +183,7 @@
 				document.getElementById('tardiness').value = employee.cashAdvEmployeeData || '';
 				document.getElementById('loan').value = employee.loanEmployeeData || '';
 				document.getElementById('others').value = employee.trainingEmployeeData || '';
+				document.getElementById('base-pay').value = employee.basePayEmployeeData || '';
 
 				// Show current values
 				document.getElementById('current-wh-tax').textContent = formatCurrency(employee.taxEmployeeData);
@@ -174,6 +193,8 @@
 				document.getElementById('current-tardiness').textContent = formatCurrency(employee.cashAdvEmployeeData);
 				document.getElementById('current-loan').textContent = formatCurrency(employee.loanEmployeeData);
 				document.getElementById('current-others').textContent = formatCurrency(employee.trainingEmployeeData);
+				document.getElementById('current-base-pay').textContent = formatCurrency(employee.basePayEmployeeData);
+
 			} catch (error) {
 				console.error('Error loading employee data:', error);
 				alert('Error loading employee contributions');
@@ -212,7 +233,8 @@
 				PhilHealth: parseFloat(document.getElementById('philhealth').value) || null,
 				Tardiness: parseFloat(document.getElementById('tardiness').value) || null,
 				Loan: parseFloat(document.getElementById('loan').value) || null,
-				Others: parseFloat(document.getElementById('others').value) || null
+				Others: parseFloat(document.getElementById('others').value) || null,
+				BasePay: parseFloat(document.getElementById('base-pay').value) || null
 			};
 
 			fetch(endpoint, {
@@ -240,22 +262,51 @@
 				.catch(error => console.error('Error:', error));
 		}
 
-		function searchEmployee() {
-			const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-			const rows = document.querySelectorAll('#employeeTableBody tr');
+	function searchEmployee() {
+		const searchTerm = document.getElementById('searchInput').value.trim();
 
-			rows.forEach(row => {
-				const name = row.cells[1].textContent.toLowerCase();
-				const id = row.cells[0].textContent.toLowerCase();
-				row.style.display = (name.includes(searchTerm) || id.includes(searchTerm))
-					? ''
-					: 'none';
+		if (searchTerm.length === 0) {
+			loadAllEmployees();
+			return;
+		}
+
+		fetch('/Contribution/SearchEmployees', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(searchTerm)
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			})
+			.then(data => {
+				if (data.error) {
+					console.error('Search error:', data.error);
+					showNoResultsMessage();
+				} else {
+					populateEmployeeTable(data);
+				}
+			})
+			.catch(error => {
+				console.error('Error searching employees:', error);
+				showNoResultsMessage();
 			});
+	}
 
-			// Show "No results" message if needed
-			const visibleRows = [...rows].filter(row => row.style.display !== 'none');
-			if (visibleRows.length === 0 && searchTerm.length > 0) {
-				// You could add a "no results" row here if desired
-			}
-}
-	</script>
+		function showNoResultsMessage() {
+			const tableBody = document.getElementById('employeeTableBody');
+			tableBody.innerHTML = `
+        <tr>
+            <td colspan="3" class="text-center py-3 text-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                No employees found matching "${document.getElementById('searchInput').value}"
+            </td>
+        </tr>
+    `;
+		}
+	
+</script>

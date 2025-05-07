@@ -174,7 +174,7 @@ public async Task<IActionResult> GetData(string sheetName)
     }
 }
 
-[HttpGet]
+    [HttpGet]
 public async Task<IActionResult> GetEmployeeDetails(string id)
 {
     try
@@ -193,22 +193,32 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
             decimal basePay = employee.BasePayEmployeeData;
             decimal hoursWorked = employee.HoursWorkedEmployeeData ?? 0;
             decimal trainingPay = employee.TrainingEmployeeData ?? 0;
-            decimal overtimePay = employee.OvertimeHoursEmployeeData ?? 0;
-            decimal holidayPay = employee.HolidayHoursEmployeeData ?? 0;
+            decimal overtimePay = (employee.OvertimeHoursEmployeeData ?? 0) * basePay; // Overtime should be multiplied by base pay
+            decimal holidayPay = (employee.HolidayHoursEmployeeData ?? 0) * basePay; // Holiday pay should be multiplied by base pay
+            
+            // Deductions
             decimal sss = employee.SssEmployeeData ?? 0;
             decimal pagibig = employee.PagIbigEmployeeData ?? 0;
             decimal loans = employee.LoanEmployeeData ?? 0;
             decimal cashAdvance = employee.CashAdvEmployeeData ?? 0;
             decimal philhealth = employee.PhilHealthEmployeeData ?? 0;
             decimal tax = employee.TaxEmployeeData ?? 0;
+            decimal lateDeduction = employee.LateDeductionEmployeeData ?? 0;
+            decimal underTimeDeduction = employee.UnderTimeEmployeeData ?? 0;
+
+            // Calculate gross pay (basic pay + additions)
             decimal grossPay = (basePay * hoursWorked) + trainingPay + overtimePay + holidayPay;
-            decimal deductions = sss + pagibig + loans + cashAdvance + philhealth + tax;
-            decimal netPay = grossPay - deductions;
+            
+            // Calculate total deductions
+            decimal totalDeductions = sss + pagibig + loans + cashAdvance + philhealth + tax + lateDeduction + underTimeDeduction;
+            
+            // Calculate net pay (gross pay - deductions)
+            decimal netPay = grossPay - totalDeductions;
 
             return Json(new 
             {
-                name = employee.NameEmployeeData, // Ensure this matches what the frontend expects
-                nameEmployeeData = employee.NameEmployeeData, // Alternative field name
+                name = employee.NameEmployeeData,
+                nameEmployeeData = employee.NameEmployeeData,
                 holidayPay,
                 overtimePay,
                 hoursWorked,
@@ -219,8 +229,11 @@ public async Task<IActionResult> GetEmployeeDetails(string id)
                 loans,
                 cashAdvance,
                 philhealth,
-                grossPay,
                 tax,
+                lateDeduction,
+                underTimeDeduction,
+                grossPay,
+                totalDeductions,
                 netPay
             });
         }
