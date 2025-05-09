@@ -1,11 +1,11 @@
-﻿
+﻿@model tb5payroll.Models.LoginModel
 @{
     Layout = "_LoginLayout";
 }
 
 <div class="container-fluid vh-100">
     <div class="row h-100">
-        <!-- Left Section -->
+        <!-- Left Section (unchanged) -->
         <div class="col-lg-6 col-md-7 col-sm-12 left-side d-flex flex-column align-items-center justify-content-center position-relative">
             <img src="~/assets/Untitled_design__3_-removebg-preview.png" alt="Big Logo" class="big-logo">
             <div class="logo-container">
@@ -28,105 +28,59 @@
             </div>
 
             <!-- Login Form -->
-            <div class="login-container text-center col-10 col-md-8">
+            <form id="account" method="post" class="login-container text-center col-10 col-md-8">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
                 <div class="input-group mb-2">
                     <span class="input-group-text"><i class="fas fa-user"></i></span>
-                    <input type="text" id="username" class="form-control text-center" placeholder="Username">
+                    <input asp-for="Email" class="form-control text-center" placeholder="Email" autocomplete="username" />
                 </div>
-                <small id="usernameError" class="error-message d-none">Username is required</small>
+                <span asp-validation-for="Email" class="text-danger"></span>
 
                 <div class="input-group mb-2 position-relative">
                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input type="password" id="password" class="form-control text-center" placeholder="Password">
+                    <input asp-for="Password" class="form-control text-center" placeholder="Password" autocomplete="current-password" id="password" />
                     <button class="btn position-absolute end-0 top-50 translate-middle-y pe-3 border-0 bg-transparent" type="button" id="togglePassword" onclick="togglePassword()">
                         <i id="toggleIcon" class="fas fa-eye"></i>
                     </button>
                 </div>
-                <small id="passwordError" class="error-message d-none">Password is required</small>
+                <span asp-validation-for="Password" class="text-danger"></span>
 
-                <button class="btn btn-light w-100 login-btn" onclick="validateLogin()">Login</button>
-            </div>
+                <div class="form-check mb-3">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                </div>
+
+                <button type="submit" class="btn btn-light w-100 login-btn">Login</button>
+            </form>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-                validateLogin(); // Call login function when Enter is pressed
-            }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    document.getElementById("account").submit();
+                }
+            });
         });
-    });
 
-    function validateLogin() {
-        let username = document.getElementById("username");
-        let password = document.getElementById("password");
-        let usernameError = document.getElementById("usernameError");
-        let passwordError = document.getElementById("passwordError");
-
-        // Hardcoded login credentials
-        const hardcodedUsername = "admin";
-        const hardcodedPassword = "password123";
-
-        let isUsernameValid = true;
-        let isPasswordValid = true;
-
-        // Validate username first
-        if (username.value.trim() === "") {
-            username.classList.add("error-border");
-            usernameError.textContent = "Username is required";
-            usernameError.classList.remove("d-none");
-            isUsernameValid = false;
-        } else if (username.value !== hardcodedUsername) {
-            username.classList.add("error-border");
-            usernameError.textContent = "Invalid username";
-            usernameError.classList.remove("d-none");
-            isUsernameValid = false;
-            setTimeout(() => { location.reload(); }, 500); // Auto-reload on invalid username
-            return;
-        } else {
-            username.classList.remove("error-border");
-            usernameError.classList.add("d-none");
+        function togglePassword() {
+            let passwordInput = document.getElementById("password");
+            let toggleIcon = document.getElementById("toggleIcon");
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            }
         }
-
-        // Validate password only if username is correct
-        if (password.value.trim() === "") {
-            password.classList.add("error-border");
-            passwordError.textContent = "Password is required";
-            passwordError.classList.remove("d-none");
-            isPasswordValid = false;
-        } else if (password.value !== hardcodedPassword) {
-            password.classList.add("error-border");
-            passwordError.textContent = "Incorrect password";
-            passwordError.classList.remove("d-none");
-            isPasswordValid = false;
-            setTimeout(() => { location.reload(); }, 500); // Auto-reload on incorrect password
-            return;
-        } else {
-            password.classList.remove("error-border");
-            passwordError.classList.add("d-none");
-        }
-
-        // Redirect if both username and password are correct
-        if (isUsernameValid && isPasswordValid) {
-            window.location.href = "/Dashboard/Dashboard"; // Redirect to dashboard
-        }
-    }
-
-    function togglePassword() {
-        let passwordInput = document.getElementById("password");
-        let toggleIcon = document.getElementById("toggleIcon");
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text";
-            toggleIcon.classList.remove("fa-eye");
-            toggleIcon.classList.add("fa-eye-slash");
-        } else {
-            passwordInput.type = "password";
-            toggleIcon.classList.remove("fa-eye-slash");
-            toggleIcon.classList.add("fa-eye");
-        }
-    }
-</script>
+    </script>
+}
