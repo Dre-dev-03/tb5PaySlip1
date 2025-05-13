@@ -54,88 +54,41 @@ namespace tb5payroll.Controllers;
             }
         }
         
-       [HttpPost]
-public async Task<IActionResult> GetSheets()
-{
-    try
-    {
-        // Validate request contains a file
-        if (Request.Form.Files.Count == 0)
+        [HttpPost]
+        public async Task<IActionResult> GetSheets()
         {
-            return BadRequest("No file was uploaded.");
-        }
-
-        var file = Request.Form.Files[0];
-        
-        // Validate file
-        if (file.Length == 0)
-        {
-            return BadRequest("The uploaded file is empty.");
-        }
-
-        // Validate Excel file extension
-        var validExtensions = new[] { ".xlsx", ".xls" };
-        var fileExtension = Path.GetExtension(file.FileName).ToLower();
-        if (!validExtensions.Contains(fileExtension))
-        {
-            return BadRequest("Please upload a valid Excel file (.xlsx or .xls)");
-        }
-
-        // Configure EPPlus (critical for proper operation)
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        
-        var sheets = new List<string>();
-        
-        using (var memoryStream = new MemoryStream())
-        {
-            // Copy file to memory stream
-            await file.CopyToAsync(memoryStream);
-            
-            // Reset position - this is often the missing piece!
-            memoryStream.Position = 0;
-            
             try
             {
-                using (var package = new ExcelPackage(memoryStream))
+                var file = Request.Form.Files[0];
+                if (file == null || file.Length == 0)
                 {
-                    // Validate workbook
-                    if (package.Workbook == null || package.Workbook.Worksheets.Count == 0)
+                    return BadRequest("No file uploaded.");
+                }
+
+                var sheets = new List<string>();
+
+                using (var stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
                     {
-                        return BadRequest("The Excel file contains no worksheets.");
-                    }
-                    
-                    // Collect sheet names
-                    foreach (var worksheet in package.Workbook.Worksheets)
-                    {
-                        if (!string.IsNullOrWhiteSpace(worksheet.Name))
+                        foreach (var sheet in package.Workbook.Worksheets)
                         {
-                            sheets.Add(worksheet.Name);
+                            sheets.Add(sheet.Name);
                         }
                     }
-                    
-                    if (sheets.Count == 0)
-                    {
-                        return BadRequest("No valid worksheets found in the Excel file.");
-                    }
                 }
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest($"Invalid Excel file: {ex.Message}");
+
+                return Json(sheets);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error processing Excel file: {ex.Message}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
         
-        return Json(sheets);
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, $"Internal server error: {ex.Message}");
-    }
-}
+       
         // Update the GetData method to use the correct EmployeeData model
 [HttpPost]
 public async Task<IActionResult> GetData(string sheetName)
