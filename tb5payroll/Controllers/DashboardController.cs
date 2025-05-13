@@ -398,6 +398,129 @@ public async Task<IActionResult> SaveManualData([FromBody] ManualEmployeeData da
     }
 }
 
+// Add this new model class to DashboardController.cs
+public class ManualModeRequest
+{
+    public IFormFile File { get; set; }
+    public List<string> SelectedSheets { get; set; } = new List<string>();
+}
+
+// Add these new endpoints to DashboardController.cs
+[HttpPost]
+public async Task<IActionResult> GetManualSheets([FromForm] ManualModeRequest request)
+{
+    try
+    {
+        if (request.File == null || request.File.Length == 0)
+        {
+            return BadRequest(new { success = false, message = "No file uploaded." });
+        }
+
+        var sheets = new List<string>();
+
+        using (var stream = new MemoryStream())
+        {
+            await request.File.CopyToAsync(stream);
+            using (var package = new ExcelPackage(stream))
+            {
+                foreach (var sheet in package.Workbook.Worksheets)
+                {
+                    sheets.Add(sheet.Name);
+                }
+            }
+        }
+
+        return Json(new { success = true, sheets });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { success = false, message = "Error loading sheets", error = ex.Message });
+    }
+}
+
+[HttpPost]
+public async Task<IActionResult> ProcessManualData([FromForm] ManualModeRequest request)
+{
+    try
+    {
+        if (request.File == null || request.File.Length == 0)
+        {
+            return BadRequest(new { success = false, message = "No file uploaded." });
+        }
+
+        if (request.SelectedSheets == null || request.SelectedSheets.Count == 0)
+        {
+            return BadRequest(new { success = false, message = "No sheets selected." });
+        }
+
+        if (request.SelectedSheets.Count > 5)
+        {
+            return BadRequest(new { success = false, message = "Maximum of 5 sheets allowed." });
+        }
+
+        var employees = new List<Employee>();
+        var processedEmployeeIds = new HashSet<string>();
+
+        using (var stream = new MemoryStream())
+        {
+            await request.File.CopyToAsync(stream);
+            using (var package = new ExcelPackage(stream))
+            {
+                foreach (var sheetName in request.SelectedSheets)
+                {
+                    var worksheet = package.Workbook.Worksheets[sheetName];
+                    if (worksheet == null) continue;
+
+                    int startRow = 5;
+                    for (int row = startRow; row <= worksheet.Dimension.End.Row; row++)
+                    {
+                        var id = worksheet.Cells[row, 1].Text;
+                        if (string.IsNullOrWhiteSpace(id)) continue;
+
+                        // Skip if we've already processed this employee
+                        if (processedEmployeeIds.Contains(id)) continue;
+                        processedEmployeeIds.Add(id);
+
+                        var name = "Not Found";
+                        if (int.TryParse(id, out int birthdayId))
+                        {
+                            var employeeData = await _context.EmployeeData
+                                .FirstOrDefaultAsync(e => e.BirthdayEmployeeData == birthdayId);
+
+                            if (employeeData != null)
+                            {
+                                name = employeeData.NameEmployeeData;
+                            }
+                        }
+
+                        // Get values from Excel
+                        var hoursWorked = worksheet.Cells[row, 5].Text;
+                        var overtime = worksheet.Cells[row, 10].Text;
+                        var workday = worksheet.Cells[row, 12].Text;
+                        var holiday = worksheet.Cells[row, 11].Text;
+
+                        employees.Add(new Employee
+                        {
+                            Id = id,
+                            Name = name,
+                            Workday = workday,
+                            Holiday = decimal.TryParse(holiday, out decimal hd) ? (int)hd : 0,
+                            Overtime = decimal.TryParse(overtime, out decimal ov) ? (int)ov : 0,
+                            HoursWorked = decimal.TryParse(hoursWorked, out decimal hw) ? (int)hw : 0
+                        });
+                    }
+                }
+            }
+        }
+
+        return Json(new { success = true, data = employees });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { success = false, message = "Error processing manual data", error = ex.Message });
+    }
+}
+
 public class ManualEmployeeData
 {
     public string Id { get; set; }

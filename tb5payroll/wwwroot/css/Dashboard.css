@@ -258,3 +258,55 @@
 .toast {
     min-width: 250px;
 }
+
+/* Add these styles to the existing style section */
+.list-group-item {
+    padding: 0.75rem 1.25rem;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.form-check-input.sheet-checkbox {
+    margin-top: 0.3em;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1100;
+}
+
+.custom-file-input-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.file-input-container {
+    position: relative;
+    display: inline-block;
+    width: auto;
+}
+
+.custom-file-input {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-file-input input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+#sheetSelectionModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
