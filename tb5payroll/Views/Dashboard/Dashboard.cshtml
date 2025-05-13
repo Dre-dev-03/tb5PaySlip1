@@ -614,38 +614,73 @@
         });
 		
 		// Handle File Upload & Sheet Selection
-		document.getElementById("excelFileInput").addEventListener("change", function (event) {
-			const file = event.target.files[0];
-			const fileLabel = document.getElementById("fileInputLabel"); // Get the label element
+		document.getElementById("excelFileInput").addEventListener("change", async function (event) {
+			const fileInput = event.target;
+			const fileLabel = document.getElementById("fileInputLabel");
+			const sheetSelect = document.getElementById("sheetSelect");
 
-			if (file) {
-				// Update the file input label
-				fileLabel.textContent = file.name;
+			// Reset UI
+			sheetSelect.innerHTML = '<option>Loading...</option>';
+			sheetSelect.disabled = true;
+
+			if (!fileInput.files || fileInput.files.length === 0) {
+				fileLabel.textContent = "Choose File";
+				return;
+			}
+
+			const file = fileInput.files[0];
+			fileLabel.textContent = file.name;
+
+			try {
+				// Show loading state
+				sheetSelect.innerHTML = '<option>Reading Excel file...</option>';
 
 				const formData = new FormData();
 				formData.append("file", file);
 
-				fetch("/Dashboard/GetSheets", { method: "POST", body: formData })
-					.then(response => response.json())
-					.then(data => {
-						const sheetSelect = document.getElementById("sheetSelect");
-						sheetSelect.innerHTML = '<option>Choose Sheet</option>';
-						data.forEach(sheet => {
-							const option = document.createElement("option");
-							option.value = sheet;
-							option.textContent = sheet;
-							sheetSelect.appendChild(option);
-						});
-						sheetSelect.disabled = false;
-					})
-					.catch(error => {
-						console.error("Error fetching sheets:", error);
-						// Reset the label if there's an error
-						fileLabel.textContent = "Choose File";
-					});
-			} else {
-				// Reset if no file selected
+				const response = await fetch("/Dashboard/GetSheets", {
+					method: "POST",
+					body: formData
+				});
+
+				// Handle HTTP errors
+				if (!response.ok) {
+					const error = await response.text();
+					throw new Error(error || 'Failed to read Excel file');
+				}
+
+				const sheets = await response.json();
+
+				if (!sheets || sheets.length === 0) {
+					throw new Error('No sheets found in Excel file');
+				}
+
+				// Populate sheet dropdown
+				sheetSelect.innerHTML = '';
+				const defaultOption = document.createElement("option");
+				defaultOption.textContent = "Select a sheet";
+				defaultOption.value = "";
+				sheetSelect.appendChild(defaultOption);
+
+				sheets.forEach(sheet => {
+					const option = document.createElement("option");
+					option.value = sheet;
+					option.textContent = sheet;
+					sheetSelect.appendChild(option);
+				});
+
+				sheetSelect.disabled = false;
+
+			} catch (error) {
+				console.error("Excel processing error:", error);
 				fileLabel.textContent = "Choose File";
+				sheetSelect.innerHTML = `<option>Error: ${error.message}</option>`;
+
+				// Show user-friendly error
+				alert(`Failed to process Excel file: ${error.message}`);
+
+				// Reset file input
+				fileInput.value = '';
 			}
 		});
 

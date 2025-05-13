@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using OfficeOpenXml;
 using tb5payroll.Data;
 using tb5payroll.Services;
 
@@ -37,6 +38,8 @@ builder.Services.AddControllersWithViews(options =>
         .Build();
     options.Filters.Add(new AuthorizeFilter(policy));
 });
+        
+ExcelPackage.License.SetNonCommercialPersonal("The Big Five Training and Assessment Center");
 
 // Configure Razor Pages to allow anonymous access to specific pages
 builder.Services.AddRazorPages(options =>
