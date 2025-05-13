@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using tb5payroll.Data;
@@ -6,7 +7,7 @@ using tb5payroll.Models;
 
 namespace tb5payroll.Controllers;
 
-
+    [Authorize]
     public class DashboardController : Controller
     {
         public IActionResult Dashboard()
