@@ -310,3 +310,113 @@
     max-height: 70vh;
     overflow-y: auto;
 }
+
+/* Threshold Controls */
+.threshold-input {
+    max-width: 120px;
+}
+
+/* Sheet Tabs */
+#sheetTabs .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+#sheetTabs .nav-link.active {
+    background-color: #f8f9fa;
+    border-color: #dee2e6 #dee2e6 #f8f9fa;
+    color: #0d6efd;
+}
+
+/* Summary Cards */
+#summaryCards .card {
+    height: 100%;
+}
+
+#summaryCards .card-body {
+    padding: 1rem;
+}
+
+#summaryCards .card-text {
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+/* Status Badges */
+.badge-late {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-overtime {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-both {
+    background-color: #fd7e14;
+    color: white;
+}
+
+/* Manual Mode Tables */
+#manualModeTables .card {
+    margin-bottom: 1.5rem;
+}
+
+#manualModeTables table {
+    font-size: 14px;
+}
+
+#manualModeTables th {
+    white-space: nowrap;
+    background-color: #f8f9fa;
+}
+
+#manualModeTables td {
+    vertical-align: middle;
+}
+
+/* Manual Mode Tables */
+#manualModeTables .card {
+    height: 100%;
+}
+
+#manualModeTables .table-responsive {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#manualModeTables th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 1;
+}
+
+#manualModeTables .card-header {
+    font-weight: bold;
+}
+
+#automaticTableContainer {
+    transition: opacity 0.3s ease, height 0.3s ease;
+}
+
+#manualTableContainer {
+    display: none;
+    transition: opacity 0.3s ease, height 0.3s ease;
+}
+
+.mode-active {
+    display: block !important;
+    opacity: 1;
+    height: auto;
+    overflow: visible;
+}
+
+.mode-inactive {
+    display: none !important;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+}

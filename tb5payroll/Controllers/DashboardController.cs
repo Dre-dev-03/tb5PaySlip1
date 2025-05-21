@@ -453,13 +453,7 @@ public async Task<IActionResult> ProcessManualData([FromForm] ManualModeRequest 
             return BadRequest(new { success = false, message = "No sheets selected." });
         }
 
-        if (request.SelectedSheets.Count > 5)
-        {
-            return BadRequest(new { success = false, message = "Maximum of 5 sheets allowed." });
-        }
-
-        var employees = new List<Employee>();
-        var processedEmployeeIds = new HashSet<string>();
+        var result = new List<SheetDTRData>();
 
         using (var stream = new MemoryStream())
         {
@@ -471,54 +465,186 @@ public async Task<IActionResult> ProcessManualData([FromForm] ManualModeRequest 
                     var worksheet = package.Workbook.Worksheets[sheetName];
                     if (worksheet == null) continue;
 
-                    int startRow = 5;
-                    for (int row = startRow; row <= worksheet.Dimension.End.Row; row++)
+                    var sheetData = new SheetDTRData
                     {
-                        var id = worksheet.Cells[row, 1].Text;
-                        if (string.IsNullOrWhiteSpace(id)) continue;
+                        SheetName = sheetName,
+                        Employees = new List<EmployeeDTRData>()
+                    };
 
-                        // Skip if we've already processed this employee
-                        if (processedEmployeeIds.Contains(id)) continue;
-                        processedEmployeeIds.Add(id);
-
-                        var name = "Not Found";
-                        if (int.TryParse(id, out int birthdayId))
+                    // Process each employee in the sheet
+                    for (int empIndex = 0; empIndex < 3; empIndex++)
+                    {
+                        var empData = ExtractEmployeeDTR(worksheet, empIndex);
+                        if (empData != null)
                         {
-                            var employeeData = await _context.EmployeeData
-                                .FirstOrDefaultAsync(e => e.BirthdayEmployeeData == birthdayId);
-
-                            if (employeeData != null)
-                            {
-                                name = employeeData.NameEmployeeData;
-                            }
+                            sheetData.Employees.Add(empData);
                         }
-
-                        // Get values from Excel
-                        var hoursWorked = worksheet.Cells[row, 5].Text;
-                        var overtime = worksheet.Cells[row, 10].Text;
-                        var workday = worksheet.Cells[row, 12].Text;
-                        var holiday = worksheet.Cells[row, 11].Text;
-
-                        employees.Add(new Employee
-                        {
-                            Id = id,
-                            Name = name,
-                            Workday = workday,
-                            Holiday = decimal.TryParse(holiday, out decimal hd) ? (int)hd : 0,
-                            Overtime = decimal.TryParse(overtime, out decimal ov) ? (int)ov : 0,
-                            HoursWorked = decimal.TryParse(hoursWorked, out decimal hw) ? (int)hw : 0
-                        });
                     }
+
+                    result.Add(sheetData);
                 }
             }
         }
 
-        return Json(new { success = true, data = employees });
+        return Json(new { success = true, data = result });
     }
     catch (Exception ex)
     {
-        return StatusCode(500, new { success = false, message = "Error processing manual data", error = ex.Message });
+        return StatusCode(500, new { 
+            success = false, 
+            message = "Error processing DTR data", 
+            error = ex.Message 
+        });
     }
+}
+
+private EmployeeDTRData ExtractEmployeeDTR(ExcelWorksheet worksheet, int employeeIndex)
+{
+    // Define column mappings for each employee (0, 1, 2)
+    var columnMappings = new[]
+    {
+        new {
+            IdCell = "J5",
+            DatePeriodCell = "B5",
+            TimeInCols = new[] { "B", "C" },
+            TimeOutCols = new[] { "D", "E", "F" },
+            OvertimeInCols = new[] { "K", "L" },
+            OvertimeOutCols = new[] { "M", "N" }
+        },
+        new {
+            IdCell = "Y5",
+            DatePeriodCell = "Q5",
+            TimeInCols = new[] { "Q", "R" },
+            TimeOutCols = new[] { "S", "T", "U" },
+            OvertimeInCols = new[] { "Z", "AA" },
+            OvertimeOutCols = new[] { "AB", "AC" }
+        },
+        new {
+            IdCell = "AN5",
+            DatePeriodCell = "AF5",
+            TimeInCols = new[] { "AF", "AG" },
+            TimeOutCols = new[] { "AH", "AI", "AJ" },
+            OvertimeInCols = new[] { "AO", "AP" },
+            OvertimeOutCols = new[] { "AQ", "AR" }
+        }
+    };
+
+    var mapping = columnMappings[employeeIndex];
+
+    // Get employee ID and date period
+    string employeeId = worksheet.Cells[mapping.IdCell].Text.Trim();
+    string datePeriod = worksheet.Cells[mapping.DatePeriodCell].Text.Trim();
+
+    if (string.IsNullOrEmpty(employeeId)) return null;
+
+    // Parse date period
+    var dates = ParseDatePeriod(datePeriod);
+    if (dates == null || dates.Count == 0) return null;
+
+    var records = new List<DTRRecord>();
+    int maxRowToCheck = Math.Min(43, 13 + dates.Count - 1);
+
+    for (int row = 13; row <= maxRowToCheck; row++)
+    {
+        // Skip blank rows after row 28 if no data
+        if (row > 28 && IsRowEmpty(worksheet, row, mapping)) continue;
+
+        var timeIn = GetMergedCellValue(worksheet, mapping.TimeInCols[0] + row, mapping.TimeInCols.Last() + row);
+        var timeOut = GetMergedCellValue(worksheet, mapping.TimeOutCols[0] + row, mapping.TimeOutCols.Last() + row);
+        var overtimeIn = GetMergedCellValue(worksheet, mapping.OvertimeInCols[0] + row, mapping.OvertimeInCols.Last() + row);
+        var overtimeOut = GetMergedCellValue(worksheet, mapping.OvertimeOutCols[0] + row, mapping.OvertimeOutCols.Last() + row);
+
+        // Skip if all time fields are empty
+        if (string.IsNullOrWhiteSpace(timeIn) && 
+            string.IsNullOrWhiteSpace(timeOut) && 
+            string.IsNullOrWhiteSpace(overtimeIn) && 
+            string.IsNullOrWhiteSpace(overtimeOut)) continue;
+
+        records.Add(new DTRRecord
+        {
+            Date = dates[row - 13].ToString("yyyy-MM-dd"),
+            TimeIn = timeIn,
+            TimeOut = timeOut,
+            OvertimeIn = overtimeIn,
+            OvertimeOut = overtimeOut
+        });
+    }
+
+    return new EmployeeDTRData
+    {
+        EmployeeId = employeeId,
+        DatePeriod = datePeriod,
+        Records = records
+    };
+}
+
+private List<DateTime> ParseDatePeriod(string datePeriod)
+{
+    if (string.IsNullOrWhiteSpace(datePeriod)) return null;
+
+    var parts = datePeriod.Split('~');
+    if (parts.Length != 2) return null;
+
+    if (DateTime.TryParse(parts[0], out DateTime startDate) && 
+        DateTime.TryParse(parts[1], out DateTime endDate))
+    {
+        var dates = new List<DateTime>();
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            dates.Add(date);
+        }
+        return dates;
+    }
+
+    return null;
+}
+
+private bool IsRowEmpty(ExcelWorksheet worksheet, int row, dynamic mapping)
+{
+    var timeIn = GetMergedCellValue(worksheet, mapping.TimeInCols[0] + row, mapping.TimeInCols.Last() + row);
+    var timeOut = GetMergedCellValue(worksheet, mapping.TimeOutCols[0] + row, mapping.TimeOutCols.Last() + row);
+    var overtimeIn = GetMergedCellValue(worksheet, mapping.OvertimeInCols[0] + row, mapping.OvertimeInCols.Last() + row);
+    var overtimeOut = GetMergedCellValue(worksheet, mapping.OvertimeOutCols[0] + row, mapping.OvertimeOutCols.Last() + row);
+
+    return string.IsNullOrWhiteSpace(timeIn) && 
+           string.IsNullOrWhiteSpace(timeOut) && 
+           string.IsNullOrWhiteSpace(overtimeIn) && 
+           string.IsNullOrWhiteSpace(overtimeOut);
+}
+
+private string GetMergedCellValue(ExcelWorksheet worksheet, string startCell, string endCell)
+{
+    var cell = worksheet.Cells[startCell + ":" + endCell];
+    return cell.Merge ? cell.First().Text : worksheet.Cells[startCell].Text;
+}
+
+[HttpPost]
+public IActionResult RenderDTRResults([FromBody] List<SheetDTRData> data)
+{
+    return PartialView("_ManualDTRResults", data);
+}
+
+// Add these classes to DashboardController.cs
+public class SheetDTRData
+{
+    public string SheetName { get; set; }
+    public List<EmployeeDTRData> Employees { get; set; }
+}
+
+public class EmployeeDTRData
+{
+    public string EmployeeId { get; set; }
+    public string DatePeriod { get; set; }
+    public List<DTRRecord> Records { get; set; }
+}
+
+public class DTRRecord
+{
+    public string Date { get; set; }
+    public string TimeIn { get; set; }
+    public string TimeOut { get; set; }
+    public string OvertimeIn { get; set; }
+    public string OvertimeOut { get; set; }
 }
 
 public class ManualEmployeeData

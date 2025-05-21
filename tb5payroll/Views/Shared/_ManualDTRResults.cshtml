@@ -1,0 +1,93 @@
+@model List<tb5payroll.Controllers.DashboardController.SheetDTRData>
+
+<div class="mt-4" id="dtrResultsContainer">
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            No DTR data found in the selected sheets.
+        </div>
+    }
+    else
+    {
+        <ul class="nav nav-tabs" id="sheetTabs" role="tablist">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(i == 0 ? "active" : "")" 
+                            id="tab-@i" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#sheet-@i" 
+                            type="button" 
+                            role="tab">
+                        @Model[i].SheetName
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content p-3 border border-top-0 rounded-bottom" id="sheetTabContent">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var sheet = Model[i];
+                <div class="tab-pane fade @(i == 0 ? "show active" : "")" 
+                     id="sheet-@i" 
+                     role="tabpanel">
+                     
+                    @foreach (var employee in sheet.Employees)
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Employee ID: @employee.EmployeeId</h5>
+                                <small class="text-muted">Period: @employee.DatePeriod</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 300px;">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time In</th>
+                                                <th>Time Out</th>
+                                                <th>Overtime In</th>
+                                                <th>Overtime Out</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var record in employee.Records)
+                                            {
+                                                <tr>
+                                                    <td>@record.Date</td>
+                                                    <td>@record.TimeIn</td>
+                                                    <td>@record.TimeOut</td>
+                                                    <td>@record.OvertimeIn</td>
+                                                    <td>@record.OvertimeOut</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .table-responsive {
+        overflow-y: auto;
+    }
+    
+    .table thead th {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+    }
+</style>

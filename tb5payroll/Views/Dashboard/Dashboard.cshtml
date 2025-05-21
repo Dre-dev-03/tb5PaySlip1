@@ -792,6 +792,7 @@
 		});
 
 		// Handle sheet selection confirmation
+		// Update the confirmSheetSelection click handler
 		document.getElementById('confirmSheetSelection').addEventListener('click', function() {
 			const selectedSheets = Array.from(document.querySelectorAll('.sheet-checkbox:checked'))
 				.map(checkbox => checkbox.value);
@@ -803,22 +804,18 @@
 
 			document.getElementById('sheetSelectionError').classList.add('d-none');
 
-			// Prepare the request
 			const formData = new FormData();
 			formData.append('file', currentManualFile);
 			selectedSheets.forEach(sheet => formData.append('SelectedSheets', sheet));
 
-			// Show loading state
 			const confirmBtn = document.getElementById('confirmSheetSelection');
 			const originalText = confirmBtn.innerHTML;
 			confirmBtn.disabled = true;
 			confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
 
-			// Close the modal
 			const modal = bootstrap.Modal.getInstance(document.getElementById('sheetSelectionModal'));
 			modal.hide();
 
-			// Process the selected sheets
 			fetch("/Dashboard/ProcessManualData", {
 				method: "POST",
 				body: formData
@@ -829,8 +826,25 @@
 						throw new Error(data.message || 'Failed to process data');
 					}
 
-					// Update the table with the combined data
-					updateTableWithManualData(data.data);
+					// Render the DTR results partial view
+					fetch('/Dashboard/RenderDTRResults', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(data.data)
+					})
+						.then(response => response.text())
+						.then(html => {
+							// Create or update the results container
+							let container = document.getElementById('dtrResultsContainer');
+							if (!container) {
+								container = document.createElement('div');
+								container.id = 'dtrResultsContainer';
+								document.querySelector('.table-responsive').insertAdjacentElement('afterend', container);
+							}
+							container.innerHTML = html;
+						});
 				})
 				.catch(error => {
 					console.error("Error processing manual data:", error);
