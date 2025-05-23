@@ -822,16 +822,16 @@
 			})
 				.then(response => response.json())
 				.then(data => {
-					if (!data.success) {
-						throw new Error(data.message || 'Failed to process data');
-					}
+					if (!data.success) throw new Error(data.message);
 
-					// Render the DTR results partial view
-					fetch('/Dashboard/RenderDTRResults', {
+					// Process calculations
+					data.data.forEach(sheet => {
+						sheet.Employees.forEach(processEmployeeDTR);
+					});
+
+					// Then render as before
+					return fetch('/Dashboard/RenderDTRResults', {
 						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
 						body: JSON.stringify(data.data)
 					})
 						.then(response => response.text())
@@ -895,6 +895,64 @@
 			adjustFontSizeToFit(document.getElementById("employeeTable"));
 
 			showToast(`Loaded data from ${employees.length} employees`, 'success');
+		}
+
+		// Convert HH:mm to minutes since midnight
+		function timeToMinutes(time) {
+			if (!time || time === "12:00") return 720; // Default to 12:00 PM
+			const [hours, minutes] = time.split(':').map(Number);
+			return hours * 60 + minutes;
+		}
+
+// Calculate hours between two times (in decimal hours)
+		function calculateTimeDifference(start, end) {
+			const startMins = timeToMinutes(start);
+			const endMins = timeToMinutes(end);
+			return Math.max(0, (endMins - startMins) / 60); // Prevent negatives
+		}
+
+// Core calculation for a single day
+		function calculateDailyHours(record) {
+			const STANDARD_HOURS = 8;
+
+			const regularHours = calculateTimeDifference(record.TimeIn, record.TimeOut);
+			const overtimeHours = calculateTimeDifference(record.OvertimeIn, record.OvertimeOut);
+
+			let undertimeMinutes = 0;
+			if (regularHours < STANDARD_HOURS) {
+				undertimeMinutes = (STANDARD_HOURS - regularHours) * 60;
+			}
+
+			return {
+				regularHours: parseFloat(regularHours.toFixed(2)),
+				overtimeMinutes: Math.round(overtimeHours * 60),
+				undertimeMinutes: Math.round(undertimeMinutes)
+			};
+		}
+
+		function processEmployeeDTR(employee) {
+			let totalRegular = 0;
+			let totalOvertime = 0;
+			let totalUndertime = 0;
+
+			employee.Records.forEach(record => {
+				const { regularHours, overtimeMinutes, undertimeMinutes } = calculateDailyHours(record);
+
+				// Add calculated fields to record
+				record.regularHours = regularHours;
+				record.overtimeMinutes = overtimeMinutes;
+				record.undertimeMinutes = undertimeMinutes;
+
+				// Accumulate totals
+				totalRegular += regularHours;
+				totalOvertime += overtimeMinutes;
+				totalUndertime += undertimeMinutes;
+			});
+
+			// Add totals to employee
+			employee.totalRegularHours = parseFloat(totalRegular.toFixed(2));
+			employee.totalOvertimeHours = parseFloat((totalOvertime / 60).toFixed(2));
+			employee.totalUndertimeMinutes = totalUndertime;
 		}
 
 		// Keep the existing automatic mode file handler

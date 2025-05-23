@@ -438,66 +438,28 @@ public async Task<IActionResult> GetManualSheets([FromForm] ManualModeRequest re
     }
 }
 
-[HttpPost]
-public async Task<IActionResult> ProcessManualData([FromForm] ManualModeRequest request)
-{
-    try
-    {
-        if (request.File == null || request.File.Length == 0)
-        {
-            return BadRequest(new { success = false, message = "No file uploaded." });
-        }
 
-        if (request.SelectedSheets == null || request.SelectedSheets.Count == 0)
-        {
-            return BadRequest(new { success = false, message = "No sheets selected." });
-        }
-
-        var result = new List<SheetDTRData>();
-
-        using (var stream = new MemoryStream())
-        {
-            await request.File.CopyToAsync(stream);
-            using (var package = new ExcelPackage(stream))
+            private void CalculateEmployeeTotals(EmployeeDTRData employee)
             {
-                foreach (var sheetName in request.SelectedSheets)
+                employee.totalRegularHours = 0;
+                employee.totalOvertimeMinutes = 0;
+                employee.totalUndertimeMinutes = 0;
+
+                foreach (var record in employee.Records)
                 {
-                    var worksheet = package.Workbook.Worksheets[sheetName];
-                    if (worksheet == null) continue;
+                    var calculation = CalculateDailyHours(record);
+                    record.regularHours = calculation.regularHours;
+                    record.overtimeMinutes = calculation.overtimeMinutes;
+                    record.undertimeMinutes = calculation.undertimeMinutes;
 
-                    var sheetData = new SheetDTRData
-                    {
-                        SheetName = sheetName,
-                        Employees = new List<EmployeeDTRData>()
-                    };
-
-                    // Process each employee in the sheet
-                    for (int empIndex = 0; empIndex < 3; empIndex++)
-                    {
-                        var empData = ExtractEmployeeDTR(worksheet, empIndex);
-                        if (empData != null)
-                        {
-                            sheetData.Employees.Add(empData);
-                        }
-                    }
-
-                    result.Add(sheetData);
+                    employee.totalRegularHours += calculation.regularHours;
+                    employee.totalOvertimeMinutes += calculation.overtimeMinutes;
+                    employee.totalUndertimeMinutes += calculation.undertimeMinutes;
                 }
+    
+                // Convert to hours for display
+                employee.totalOvertimeHours = employee.totalOvertimeMinutes / 60.0;
             }
-        }
-
-        return Json(new { success = true, data = result });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { 
-            success = false, 
-            message = "Error processing DTR data", 
-            error = ex.Message 
-        });
-    }
-}
-
 private EmployeeDTRData ExtractEmployeeDTR(ExcelWorksheet worksheet, int employeeIndex)
 {
     // Define column mappings for each employee (0, 1, 2)
@@ -624,6 +586,66 @@ public IActionResult RenderDTRResults([FromBody] List<SheetDTRData> data)
     return PartialView("_ManualDTRResults", data);
 }
 
+[HttpPost]
+public async Task<IActionResult> ProcessManualData([FromForm] ManualModeRequest request)
+{
+    try
+    {
+        if (request.File == null || request.File.Length == 0)
+        {
+            return BadRequest(new { success = false, message = "No file uploaded." });
+        }
+
+        if (request.SelectedSheets == null || request.SelectedSheets.Count == 0)
+        {
+            return BadRequest(new { success = false, message = "No sheets selected." });
+        }
+
+        var result = new List<SheetDTRData>();
+
+        using (var stream = new MemoryStream())
+        {
+            await request.File.CopyToAsync(stream);
+            using (var package = new ExcelPackage(stream))
+            {
+                foreach (var sheetName in request.SelectedSheets)
+                {
+                    var worksheet = package.Workbook.Worksheets[sheetName];
+                    if (worksheet == null) continue;
+
+                    var sheetData = new SheetDTRData
+                    {
+                        SheetName = sheetName,
+                        Employees = new List<EmployeeDTRData>()
+                    };
+
+                    for (int empIndex = 0; empIndex < 3; empIndex++)
+                    {
+                        var empData = ExtractEmployeeDTR(worksheet, empIndex);
+                        if (empData != null)
+                        {
+                            // Calculate and set the time values
+                            CalculateEmployeeTotals(empData);
+                            sheetData.Employees.Add(empData);
+                        }
+                    }
+
+                    result.Add(sheetData);
+                }
+
+                return Json(new { success = true, data = result });
+            }
+        }
+    } catch (Exception ex)
+         {
+             return StatusCode(500, new { 
+                 success = false, 
+                 message = "Error processing DTR data", 
+                 error = ex.Message 
+             });
+         }
+}
+
 // Add these classes to DashboardController.cs
 public class SheetDTRData
 {
@@ -636,6 +658,11 @@ public class EmployeeDTRData
     public string EmployeeId { get; set; }
     public string DatePeriod { get; set; }
     public List<DTRRecord> Records { get; set; }
+    
+    public double totalRegularHours { get; set; }
+    public int totalOvertimeMinutes { get; set; }
+    public int totalUndertimeMinutes { get; set; }
+    public double totalOvertimeHours { get; set; }
 }
 
 public class DTRRecord
@@ -645,6 +672,9 @@ public class DTRRecord
     public string TimeOut { get; set; }
     public string OvertimeIn { get; set; }
     public string OvertimeOut { get; set; }
+    public double regularHours { get; set; }
+    public int overtimeMinutes { get; set; }
+    public int undertimeMinutes { get; set; }
 }
 
 public class ManualEmployeeData

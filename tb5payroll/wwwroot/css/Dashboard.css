@@ -420,3 +420,16 @@
     height: 0;
     overflow: hidden;
 }
+
+.undertime-day {
+    border-left: 3px solid #dc3545; /* Red accent */
+}
+
+.overtime-day {
+    background-color: rgba(255, 193, 7, 0.2); /* Light orange */
+}
+
+.totals-row {
+    position: sticky;
+    bottom: 0;
+}

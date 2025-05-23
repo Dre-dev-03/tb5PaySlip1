@@ -53,16 +53,28 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var record in employee.Records)
-                                            {
-                                                <tr>
-                                                    <td>@record.Date</td>
-                                                    <td>@record.TimeIn</td>
-                                                    <td>@record.TimeOut</td>
-                                                    <td>@record.OvertimeIn</td>
-                                                    <td>@record.OvertimeOut</td>
-                                                </tr>
-                                            }
+                                        @foreach (var record in employee.Records)
+                                        {
+                                            <tr class="@(record.undertimeMinutes > 0 ? "undertime-day" : "") 
+                      @(record.overtimeMinutes > 0 ? "overtime-day" : "")">
+                                                <td>@record.Date</td>
+                                                <td>@record.TimeIn</td>
+                                                <td>@record.TimeOut</td>
+                                                <td>@record.OvertimeIn</td>
+                                                <td>@record.OvertimeOut</td>
+                                                <!-- Hidden calculated columns for JS -->
+                                                <td class="d-none">@record.regularHours</td>
+                                                <td class="d-none">@record.overtimeMinutes</td>
+                                                <td class="d-none">@record.undertimeMinutes</td>
+                                            </tr>
+                                        }
+                                        <!-- Totals Row -->
+                                        <tr class="totals-row bg-light fw-bold">
+                                            <td colspan="2">Total</td>
+                                            <td>@employee.totalRegularHours.ToString("0.00")h</td>
+                                            <td>@employee.totalOvertimeHours.ToString("0.00")h OT</td>
+                                            <td>@employee.totalUndertimeMinutes.ToString("0")m UT</td>
+                                        </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -76,6 +88,15 @@
 </div>
 
 <style>
+    .undertime-day {
+        border-left: 3px solid #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .overtime-day {
+        background-color: rgba(255, 193, 7, 0.2);
+    }
+    
     .table-responsive {
         overflow-y: auto;
     }
@@ -89,5 +110,11 @@
     
     .nav-tabs .nav-link {
         padding: 0.5rem 1rem;
+    }
+    
+    .totals-row {
+        position: sticky;
+        bottom: 0;
+        background: #f8f9fa !important;
     }
 </style>
