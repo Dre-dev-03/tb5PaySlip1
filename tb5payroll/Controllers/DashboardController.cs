@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
@@ -84,6 +85,32 @@ namespace tb5payroll.Controllers;
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        
+        private static class DTRCalculator
+        {
+            private const int StandardHoursPerDay = 8; // 8-hour workday
+            private const int StandardMinutesPerDay = StandardHoursPerDay * 60;
+
+            public static (double totalHours, int overtimeMins, int undertimeMins) CalculateWorkHours(string timeIn, string timeOut)
+            {
+                if (string.IsNullOrWhiteSpace(timeIn)) timeIn = "0:00";
+                if (string.IsNullOrWhiteSpace(timeOut)) timeOut = "0:00";
+
+                // Parse time strings (handles formats like "8:00", "8:00 AM", "08:00")
+                var timeInParsed = DateTime.ParseExact(timeIn, ["h:mm tt", "H:mm", "h:mm", "H.mm"], CultureInfo.InvariantCulture);
+                var timeOutParsed = DateTime.ParseExact(timeOut, ["h:mm tt", "H:mm", "h:mm", "H.mm"], CultureInfo.InvariantCulture);
+
+                // Calculate total minutes worked
+                var totalMinutes = (timeOutParsed - timeInParsed).TotalMinutes;
+                var totalHours = Math.Round(totalMinutes / 60, 2);
+
+                // Calculate overtime/undertime
+                int overtime = (int)Math.Max(0, totalMinutes - StandardMinutesPerDay);
+                int undertime = (int)Math.Max(0, StandardMinutesPerDay - totalMinutes);
+
+                return (totalHours, overtime, undertime);
             }
         }
 
@@ -560,13 +587,19 @@ private EmployeeDTRData ExtractEmployeeDTR(ExcelWorksheet worksheet, int employe
             string.IsNullOrWhiteSpace(overtimeIn) && 
             string.IsNullOrWhiteSpace(overtimeOut)) continue;
 
+        // Calculate work hours
+        var (totalHours, overtimeMins, undertimeMins) = CalculateWorkHours(timeIn, timeOut);
+
         records.Add(new DTRRecord
         {
             Date = dates[row - 13].ToString("yyyy-MM-dd"),
             TimeIn = timeIn,
             TimeOut = timeOut,
             OvertimeIn = overtimeIn,
-            OvertimeOut = overtimeOut
+            OvertimeOut = overtimeOut,
+            TotalHours = totalHours,
+            OvertimeMinutes = overtimeMins,
+            UndertimeMinutes = undertimeMins
         });
     }
 
@@ -576,6 +609,40 @@ private EmployeeDTRData ExtractEmployeeDTR(ExcelWorksheet worksheet, int employe
         DatePeriod = datePeriod,
         Records = records
     };
+}
+
+private (double totalHours, int overtimeMins, int undertimeMins) CalculateWorkHours(string timeIn, string timeOut)
+{
+    const int standardHoursPerDay = 8;
+    const int standardMinutes = standardHoursPerDay * 60;
+    
+    // Handle empty/missing values
+    if (string.IsNullOrWhiteSpace(timeIn)) timeIn = "0:00";
+    if (string.IsNullOrWhiteSpace(timeOut)) timeOut = "0:00";
+
+    try
+    {
+        // Parse time strings (handles formats like "8:00", "8:00 AM", "08:00")
+        var inTime = DateTime.ParseExact(timeIn, new[] { "h:mm tt", "H:mm", "h:mm", "H.mm" }, 
+                            CultureInfo.InvariantCulture, DateTimeStyles.None);
+        var outTime = DateTime.ParseExact(timeOut, new[] { "h:mm tt", "H:mm", "h:mm", "H.mm" }, 
+                             CultureInfo.InvariantCulture, DateTimeStyles.None);
+
+        // Calculate total minutes worked
+        var totalMinutes = (outTime - inTime).TotalMinutes;
+        var totalHours = Math.Round(totalMinutes / 60, 2);
+
+        // Calculate overtime/undertime
+        int overtime = (int)Math.Max(0, totalMinutes - standardMinutes);
+        int undertime = (int)Math.Max(0, standardMinutes - totalMinutes);
+
+        return (totalHours, overtime, undertime);
+    }
+    catch (FormatException)
+    {
+        // Return zeros if time format is invalid
+        return (0, 0, 0);
+    }
 }
 
 private List<DateTime> ParseDatePeriod(string datePeriod)
@@ -645,6 +712,9 @@ public class DTRRecord
     public string TimeOut { get; set; }
     public string OvertimeIn { get; set; }
     public string OvertimeOut { get; set; }
+    public double TotalHours { get; set; }
+    public int OvertimeMinutes { get; set; }
+    public int UndertimeMinutes { get; set; }
 }
 
 public class ManualEmployeeData
